@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mochi — Discover</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --pink-soft: #FAE8EF;
+            --pink-light: #F5C9D6;
+            --pink: #E8A0B4;
+            --pink-deep: #C97A8E;
+            --text: #4A3040;
+            --text-muted: #9B7B8A;
+            --border: #F0DDE5;
+            --surface: #FFFFFF;
+        }
+
+        body { background: #FDF8FA; color: var(--text); font-family: 'Nunito', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+        header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1.5px solid var(--border);
+            padding: 15px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo-area { display: flex; align-items: center; gap: 8px; }
+        .logo-bunny { font-size: 1.4rem; }
+        .logo-wordmark { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--pink-deep); font-weight: 700; }
+        nav { display: flex; gap: 4px; }
+        nav a { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-decoration: none; padding: 7px 14px; border-radius: 10px; transition: all 0.2s; }
+        nav a:hover, nav a.active { background: var(--pink-soft); color: var(--pink-deep); }
+
+        .page-hero { max-width: 1100px; margin: 0 auto; padding: 52px 40px 28px; }
+        .page-hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(1.9rem, 4vw, 2.7rem); line-height: 1.2; margin-bottom: 8px; }
+        .page-hero h1 em { color: var(--pink-deep); font-style: italic; }
+        .page-hero p { color: var(--text-muted); font-size: 0.93rem; }
+
+        .categories {
+            max-width: 1100px; margin: 0 auto;
+            padding: 0 40px 28px;
+            display: flex; gap: 8px; flex-wrap: wrap;
+        }
+        .cat-btn {
+            background: var(--surface); border: 1.5px solid var(--border);
+            border-radius: 100px; padding: 9px 18px;
+            font-family: 'Nunito', sans-serif; font-size: 0.82rem; font-weight: 700;
+            color: var(--text-muted); cursor: pointer; transition: all 0.2s; white-space: nowrap;
+        }
+        .cat-btn:hover { border-color: var(--pink); color: var(--pink-deep); }
+        .cat-btn.active { background: var(--pink-deep); border-color: var(--pink-deep); color: #fff; }
+
+        .divider { max-width: 1100px; margin: 0 auto 32px; padding: 0 40px; border-top: 1.5px solid var(--border); }
+
+        /* ── Grid ── */
+        .discover-grid {
+            max-width: 1100px; margin: 0 auto;
+            padding: 0 40px 60px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 28px;
+        }
+
+        /* ── Skeleton ── */
+        .skeleton-card { display: flex; flex-direction: column; gap: 10px; }
+        .skeleton {
+            background: linear-gradient(90deg, var(--pink-soft) 25%, #FADADD 50%, var(--pink-soft) 75%);
+            background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 12px;
+        }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .sk-cover { aspect-ratio: 2/3; border-radius: 12px; }
+        .sk-title { height: 14px; border-radius: 6px; width: 85%; }
+        .sk-author { height: 11px; border-radius: 6px; width: 60%; }
+        .sk-blurb { height: 9px; border-radius: 6px; width: 100%; }
+        .sk-blurb2 { height: 9px; border-radius: 6px; width: 75%; }
+        .sk-btn { height: 34px; border-radius: 100px; }
+
+        /* ── Card ── */
+        .discover-card { display: flex; flex-direction: column; gap: 8px; }
+
+        .disc-cover-wrap {
+            position: relative; border-radius: 14px; overflow: hidden;
+            aspect-ratio: 2/3; box-shadow: 0 6px 24px rgba(74,48,64,0.12);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+            background: var(--pink-soft); cursor: pointer;
+        }
+        .discover-card:hover .disc-cover-wrap { transform: translateY(-5px); box-shadow: 0 14px 36px rgba(74,48,64,0.18); }
+        .disc-cover-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .disc-cover-fallback {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 16px 12px; text-align: center;
+        }
+        .disc-fb-title { font-family: 'Playfair Display', serif; font-size: 0.8rem; font-weight: 700; color: #fff; line-height: 1.3; }
+
+        .on-shelf-badge {
+            position: absolute; top: 9px; right: 9px;
+            background: rgba(201,122,142,0.92); color: #fff;
+            font-size: 0.58rem; font-weight: 800; letter-spacing: 0.8px; text-transform: uppercase;
+            padding: 4px 8px; border-radius: 100px; backdrop-filter: blur(4px);
+        }
+        .disc-cover-loader {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            background: var(--pink-soft);
+        }
+        .disc-cover-loader::after { content: '🐰'; font-size: 1.6rem; animation: pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity: 0.4; transform: scale(0.9); } 50% { opacity: 1; transform: scale(1); } }
+
+        .disc-title { font-family: 'Playfair Display', serif; font-size: 0.88rem; font-weight: 700; color: var(--text); line-height: 1.3; }
+        .disc-author { font-size: 0.74rem; color: var(--text-muted); font-weight: 500; }
+
+        .disc-blurb {
+            font-size: 0.73rem; color: var(--text-muted); line-height: 1.55;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .disc-subjects { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 2px; }
+        .disc-subject {
+            font-size: 0.63rem; font-weight: 700; color: var(--pink-deep);
+            background: var(--pink-soft); border-radius: 100px;
+            padding: 2px 8px;
+        }
+
+        .add-wrap { margin-top: 4px; }
+        .btn-add {
+            width: 100%; background: var(--pink-soft); border: 1.5px solid var(--pink-light);
+            border-radius: 100px; padding: 8px 12px;
+            font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 700;
+            color: var(--pink-deep); cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 5px;
+        }
+        .btn-add:hover { background: var(--pink-light); border-color: var(--pink); }
+        .btn-on-shelf {
+            width: 100%; background: #EEF7F2; border: 1.5px solid #B8D4C5;
+            border-radius: 100px; padding: 8px 12px;
+            font-family: 'Nunito', sans-serif; font-size: 0.75rem; font-weight: 700;
+            color: #5A9070; display: flex; align-items: center; justify-content: center; gap: 5px;
+            cursor: default;
+        }
+        .status-picker { display: none; gap: 5px; }
+        .status-picker.open { display: flex; }
+        .btn-status {
+            flex: 1; background: var(--surface); border: 1.5px solid var(--border);
+            border-radius: 10px; padding: 6px 4px;
+            font-family: 'Nunito', sans-serif; font-size: 0.68rem; font-weight: 700;
+            color: var(--text-muted); cursor: pointer; transition: all 0.15s;
+            text-align: center; line-height: 1.4;
+        }
+        .btn-status:hover { background: var(--pink-soft); border-color: var(--pink); color: var(--pink-deep); }
+
+        /* ── Sentinel / load more ── */
+        #scrollSentinel { height: 1px; }
+        .load-more-spinner {
+            grid-column: 1 / -1; text-align: center;
+            padding: 32px; font-size: 1.6rem;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        /* ── Empty / error ── */
+        .grid-message { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted); }
+        .grid-message .msg-emoji { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+        .grid-message p { font-size: 0.87rem; }
+
+        /* ── Pet corner ── */
+        .pet-corner {
+            position: fixed; bottom: 28px; right: 28px; z-index: 50;
+            background: var(--surface); border: 1.5px solid var(--pink-light);
+            border-radius: 20px; padding: 14px 18px;
+            box-shadow: 0 8px 32px rgba(232,160,180,0.2);
+            display: flex; align-items: center; gap: 10px; max-width: 220px;
+            animation: pet-float 4s ease-in-out infinite;
+        }
+        @keyframes pet-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+        .pet-emoji { font-size: 2rem; }
+        .pet-message { font-size: 0.74rem; color: var(--text-muted); line-height: 1.5; }
+        .pet-message strong { display: block; color: var(--text); font-size: 0.77rem; }
+
+        /* ── Book detail modal ── */
+        .book-modal-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(74,48,64,0.5);
+            backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center;
+            padding: 24px;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .book-modal-overlay.open { opacity: 1; pointer-events: all; }
+
+        .book-modal {
+            background: #fff; border-radius: 28px;
+            width: 100%; max-width: 520px;
+            max-height: 88vh; overflow-y: auto;
+            padding: 32px;
+            box-shadow: 0 24px 80px rgba(74,48,64,0.22);
+            transform: translateY(16px);
+            transition: transform 0.25s ease;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+        .book-modal-overlay.open .book-modal { transform: translateY(0); }
+
+        .modal-close {
+            position: absolute; top: 16px; right: 20px;
+            background: var(--pink-soft); border: none; border-radius: 50%;
+            width: 34px; height: 34px; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); transition: all 0.2s;
+        }
+        .modal-close:hover { background: var(--pink-light); color: var(--pink-deep); }
+
+        .modal-inner { position: relative; }
+
+        .modal-hero {
+            display: flex; gap: 20px; align-items: flex-start;
+        }
+        .modal-cover {
+            width: 100px; height: 150px; border-radius: 12px;
+            overflow: hidden; flex-shrink: 0;
+            box-shadow: 0 8px 28px rgba(74,48,64,0.18);
+        }
+        .modal-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .modal-cover-fallback {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            padding: 10px; text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 0.72rem; font-weight: 700; color: #fff; line-height: 1.3;
+        }
+        .modal-meta { flex: 1; padding-top: 4px; }
+        .modal-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem; font-weight: 700; line-height: 1.25;
+            color: var(--text); margin-bottom: 6px;
+        }
+        .modal-author { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 12px; }
+        .modal-subjects { display: flex; gap: 5px; flex-wrap: wrap; }
+        .modal-subject {
+            font-size: 0.68rem; font-weight: 700; color: var(--pink-deep);
+            background: var(--pink-soft); border-radius: 100px; padding: 3px 10px;
+        }
+
+        .modal-summary-label {
+            font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+            letter-spacing: 0.9px; color: var(--text-muted); margin-bottom: 8px;
+        }
+        .modal-summary {
+            font-size: 0.88rem; line-height: 1.75; color: var(--text);
+        }
+        .modal-summary-loading { color: var(--text-muted); font-style: italic; font-size: 0.85rem; }
+
+        .modal-add-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .modal-btn-add {
+            flex: 1; background: var(--pink-deep); color: #fff;
+            border: none; border-radius: 14px; padding: 13px 20px;
+            font-family: 'Nunito', sans-serif; font-size: 0.88rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .modal-btn-add:hover { background: #b8697d; }
+        .modal-btn-on-shelf {
+            flex: 1; background: #EEF7F2; border: 1.5px solid #B8D4C5;
+            border-radius: 14px; padding: 13px 20px;
+            font-family: 'Nunito', sans-serif; font-size: 0.88rem; font-weight: 700;
+            color: #5A9070; text-align: center;
+        }
+        .modal-status-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .modal-status-btn {
+            flex: 1; background: var(--surface); border: 1.5px solid var(--border);
+            border-radius: 12px; padding: 10px 8px;
+            font-family: 'Nunito', sans-serif; font-size: 0.78rem; font-weight: 700;
+            color: var(--text-muted); cursor: pointer; transition: all 0.15s; text-align: center;
+        }
+        .modal-status-btn:hover { background: var(--pink-soft); border-color: var(--pink); color: var(--pink-deep); }
+
+        @media (max-width: 640px) {
+            header { padding: 14px 18px; }
+            nav a { padding: 6px 10px; font-size: 0.8rem; }
+            .page-hero { padding: 32px 20px 20px; }
+            .categories { padding: 0 20px 24px; }
+            .discover-grid { padding: 0 20px 80px; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 18px; }
+            .pet-corner { bottom: 14px; right: 14px; }
+            .book-modal { padding: 24px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo-area">
+        <span class="logo-bunny">🐰</span>
+        <span class="logo-wordmark">Mochi</span>
+    </div>
+    <nav>
+        <a href="shelf.html">My Shelf</a>
+        <a href="discover.html" class="active">Discover</a>
+        <a href="pet.html">My Pet</a>
+        <a href="wrapped.html">Wrapped</a>
+    </nav>
+</header>
+
+<div class="page-hero">
+    <h1>Find your <em>next obsession.</em></h1>
+    <p>Picked just for you. Scroll forever. 🌸</p>
+</div>
+
+<div class="categories" id="categories"></div>
+<div class="divider"></div>
+<div class="discover-grid" id="discoverGrid"></div>
+<div id="scrollSentinel"></div>
+
+<div class="pet-corner">
+    <span class="pet-emoji">🐰</span>
+    <div class="pet-message">
+        <strong>Mochi says...</strong>
+        <span id="petMsg">Find something good!</span>
+    </div>
+</div>
+
+<!-- Book detail modal -->
+<div class="book-modal-overlay" id="bookModalOverlay">
+    <div class="book-modal modal-inner">
+        <button class="modal-close" id="modalClose">✕</button>
+        <div class="modal-hero">
+            <div class="modal-cover" id="modalCover"></div>
+            <div class="modal-meta">
+                <div class="modal-title" id="modalTitle"></div>
+                <div class="modal-author" id="modalAuthor"></div>
+                <div class="modal-subjects" id="modalSubjects"></div>
+            </div>
+        </div>
+        <div>
+            <div class="modal-summary-label">About this book</div>
+            <div class="modal-summary" id="modalSummary"><span class="modal-summary-loading">Loading summary... 🌸</span></div>
+        </div>
+        <div id="modalActions"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="mochi.js"></script>
+<script>
+// ──────────────────────────────────────────
+// Config
+// ──────────────────────────────────────────
+const BOOKTOK_BOOKS = [
+    { title: "Fourth Wing", author: "Rebecca Yarros" },
+    { title: "Iron Flame", author: "Rebecca Yarros" },
+    { title: "A Court of Thorns and Roses", author: "Sarah J. Maas" },
+    { title: "A Court of Mist and Fury", author: "Sarah J. Maas" },
+    { title: "It Ends with Us", author: "Colleen Hoover" },
+    { title: "Verity", author: "Colleen Hoover" },
+    { title: "Reminders of Him", author: "Colleen Hoover" },
+    { title: "The Seven Husbands of Evelyn Hugo", author: "Taylor Jenkins Reid" },
+    { title: "Daisy Jones and the Six", author: "Taylor Jenkins Reid" },
+    { title: "Ugly Love", author: "Colleen Hoover" },
+    { title: "Happy Place", author: "Emily Henry" },
+    { title: "Beach Read", author: "Emily Henry" },
+    { title: "Book Lovers", author: "Emily Henry" },
+    { title: "Icebreaker", author: "Hannah Grace" },
+    { title: "The Cruel Prince", author: "Holly Black" },
+    { title: "Powerless", author: "Lauren Roberts" },
+    { title: "Twisted Love", author: "Ana Huang" },
+    { title: "People We Meet on Vacation", author: "Emily Henry" },
+    { title: "From Blood and Ash", author: "Jennifer L. Armentrout" },
+    { title: "The Midnight Library", author: "Matt Haig" },
+    { title: "Haunting Adeline", author: "H.D. Carlton" },
+    { title: "The Spanish Love Deception", author: "Elena Armas" },
+    { title: "King of Wrath", author: "Ana Huang" },
+    { title: "Tomorrow and Tomorrow and Tomorrow", author: "Gabrielle Zevin" },
+];
+
+const ROMANCE_BOOKS = [
+    { title: "The Hating Game", author: "Sally Thorne" },
+    { title: "It Ends with Us", author: "Colleen Hoover" },
+    { title: "Ugly Love", author: "Colleen Hoover" },
+    { title: "November 9", author: "Colleen Hoover" },
+    { title: "Reminders of Him", author: "Colleen Hoover" },
+    { title: "Beach Read", author: "Emily Henry" },
+    { title: "People We Meet on Vacation", author: "Emily Henry" },
+    { title: "Happy Place", author: "Emily Henry" },
+    { title: "Book Lovers", author: "Emily Henry" },
+    { title: "The Kiss Quotient", author: "Helen Hoang" },
+    { title: "The Spanish Love Deception", author: "Elena Armas" },
+    { title: "The American Roommate Experiment", author: "Elena Armas" },
+    { title: "Get a Life Chloe Brown", author: "Talia Hibbert" },
+    { title: "Act Your Age Eve Brown", author: "Talia Hibbert" },
+    { title: "The Flatshare", author: "Beth O'Leary" },
+    { title: "The Switch", author: "Beth O'Leary" },
+    { title: "One Day in December", author: "Josie Silver" },
+    { title: "The Unhoneymooners", author: "Christina Lauren" },
+    { title: "The Friend Zone", author: "Abby Jimenez" },
+    { title: "Part of Your World", author: "Abby Jimenez" },
+    { title: "Just for the Summer", author: "Abby Jimenez" },
+    { title: "Beautiful Disaster", author: "Jamie McGuire" },
+    { title: "Boyfriend Material", author: "Alexis Hall" },
+    { title: "In a Holidaze", author: "Christina Lauren" },
+];
+
+const DARK_ROMANCE_BOOKS = [
+    { title: "Haunting Adeline", author: "H.D. Carlton" },
+    { title: "Stalking Adeline", author: "H.D. Carlton" },
+    { title: "Twisted Love", author: "Ana Huang" },
+    { title: "Twisted Games", author: "Ana Huang" },
+    { title: "Twisted Hate", author: "Ana Huang" },
+    { title: "King of Wrath", author: "Ana Huang" },
+    { title: "From Blood and Ash", author: "Jennifer L. Armentrout" },
+    { title: "A Shadow in the Ember", author: "Jennifer L. Armentrout" },
+    { title: "Icebreaker", author: "Hannah Grace" },
+    { title: "Daydream", author: "Hannah Grace" },
+    { title: "Powerless", author: "Lauren Roberts" },
+    { title: "Corrupt", author: "Penelope Douglas" },
+    { title: "Credence", author: "Penelope Douglas" },
+    { title: "Birthday Girl", author: "Penelope Douglas" },
+    { title: "Terms and Conditions", author: "Lauren Asher" },
+    { title: "Binding 13", author: "Chloe Walsh" },
+    { title: "Devious Lies", author: "Parker S. Huntington" },
+    { title: "The Villain", author: "L.J. Shen" },
+    { title: "Kingdom of the Feared", author: "Kerri Maniscalco" },
+    { title: "Den of Vipers", author: "K.A. Knight" },
+];
+
+const THRILLER_BOOKS = [
+    { title: "Gone Girl", author: "Gillian Flynn" },
+    { title: "Sharp Objects", author: "Gillian Flynn" },
+    { title: "The Girl on the Train", author: "Paula Hawkins" },
+    { title: "Behind Closed Doors", author: "B.A. Paris" },
+    { title: "The Silent Patient", author: "Alex Michaelides" },
+    { title: "The Maidens", author: "Alex Michaelides" },
+    { title: "Verity", author: "Colleen Hoover" },
+    { title: "The Guest List", author: "Lucy Foley" },
+    { title: "The Hunting Party", author: "Lucy Foley" },
+    { title: "In a Dark Dark Wood", author: "Ruth Ware" },
+    { title: "The Turn of the Key", author: "Ruth Ware" },
+    { title: "One by One", author: "Ruth Ware" },
+    { title: "Rock Paper Scissors", author: "Alice Feeney" },
+    { title: "Sometimes I Lie", author: "Alice Feeney" },
+    { title: "His and Hers", author: "Alice Feeney" },
+    { title: "The Last Thing He Told Me", author: "Laura Dave" },
+    { title: "Big Little Lies", author: "Liane Moriarty" },
+    { title: "Nine Perfect Strangers", author: "Liane Moriarty" },
+    { title: "The Woman in the Window", author: "A.J. Finn" },
+    { title: "Finlay Donovan Is Killing It", author: "Elle Cosimano" },
+    { title: "The Sanatorium", author: "Sarah Pearse" },
+    { title: "The Whisper Man", author: "Alex North" },
+    { title: "Local Woman Missing", author: "Mary Kubica" },
+    { title: "Pretty Girls", author: "Karin Slaughter" },
+];
+
+const FANTASY_BOOKS = [
+    { title: "Fourth Wing", author: "Rebecca Yarros" },
+    { title: "Iron Flame", author: "Rebecca Yarros" },
+    { title: "A Court of Thorns and Roses", author: "Sarah J. Maas" },
+    { title: "A Court of Mist and Fury", author: "Sarah J. Maas" },
+    { title: "Throne of Glass", author: "Sarah J. Maas" },
+    { title: "The Cruel Prince", author: "Holly Black" },
+    { title: "The Wicked King", author: "Holly Black" },
+    { title: "Powerless", author: "Lauren Roberts" },
+    { title: "From Blood and Ash", author: "Jennifer L. Armentrout" },
+    { title: "Six of Crows", author: "Leigh Bardugo" },
+    { title: "Crooked Kingdom", author: "Leigh Bardugo" },
+    { title: "Shadow and Bone", author: "Leigh Bardugo" },
+    { title: "The Night Circus", author: "Erin Morgenstern" },
+    { title: "Caraval", author: "Stephanie Garber" },
+    { title: "Legendary", author: "Stephanie Garber" },
+    { title: "An Ember in the Ashes", author: "Sabaa Tahir" },
+    { title: "The Name of the Wind", author: "Patrick Rothfuss" },
+    { title: "The Poppy War", author: "R.F. Kuang" },
+    { title: "Babel", author: "R.F. Kuang" },
+    { title: "Kingdom of the Wicked", author: "Kerri Maniscalco" },
+    { title: "The House in the Cerulean Sea", author: "TJ Klune" },
+    { title: "House of Salt and Sorrows", author: "Erin A. Craig" },
+    { title: "The Gilded Wolves", author: "Roshani Chokshi" },
+    { title: "Piranesi", author: "Susanna Clarke" },
+];
+
+const CONTEMPORARY_BOOKS = [
+    { title: "The Midnight Library", author: "Matt Haig" },
+    { title: "Normal People", author: "Sally Rooney" },
+    { title: "Conversations with Friends", author: "Sally Rooney" },
+    { title: "Beautiful World Where Are You", author: "Sally Rooney" },
+    { title: "One Day", author: "David Nicholls" },
+    { title: "Me Before You", author: "Jojo Moyes" },
+    { title: "The Flatshare", author: "Beth O'Leary" },
+    { title: "Tomorrow and Tomorrow and Tomorrow", author: "Gabrielle Zevin" },
+    { title: "The Seven Husbands of Evelyn Hugo", author: "Taylor Jenkins Reid" },
+    { title: "Daisy Jones and the Six", author: "Taylor Jenkins Reid" },
+    { title: "Malibu Rising", author: "Taylor Jenkins Reid" },
+    { title: "Where the Crawdads Sing", author: "Delia Owens" },
+    { title: "Lessons in Chemistry", author: "Bonnie Garmus" },
+    { title: "Eleanor Oliphant Is Completely Fine", author: "Gail Honeyman" },
+    { title: "A Little Life", author: "Hanya Yanagihara" },
+    { title: "The Alchemist", author: "Paulo Coelho" },
+    { title: "The Friend Zone", author: "Abby Jimenez" },
+    { title: "Part of Your World", author: "Abby Jimenez" },
+    { title: "Dial A for Aunties", author: "Jesse Q. Sutanto" },
+    { title: "The Unhoneymooners", author: "Christina Lauren" },
+    { title: "Remarkably Bright Creatures", author: "Shelby Van Pelt" },
+    { title: "Hello Beautiful", author: "Ann Napolitano" },
+    { title: "Demon Copperhead", author: "Barbara Kingsolver" },
+    { title: "The Covenant of Water", author: "Abraham Verghese" },
+];
+
+const YA_BOOKS = [
+    { title: "The Hunger Games", author: "Suzanne Collins" },
+    { title: "Catching Fire", author: "Suzanne Collins" },
+    { title: "Twilight", author: "Stephenie Meyer" },
+    { title: "New Moon", author: "Stephenie Meyer" },
+    { title: "Divergent", author: "Veronica Roth" },
+    { title: "The Fault in Our Stars", author: "John Green" },
+    { title: "Looking for Alaska", author: "John Green" },
+    { title: "Turtles All the Way Down", author: "John Green" },
+    { title: "To All the Boys I've Loved Before", author: "Jenny Han" },
+    { title: "The Summer I Turned Pretty", author: "Jenny Han" },
+    { title: "It's Not Summer Without You", author: "Jenny Han" },
+    { title: "An Ember in the Ashes", author: "Sabaa Tahir" },
+    { title: "Six of Crows", author: "Leigh Bardugo" },
+    { title: "Shadow and Bone", author: "Leigh Bardugo" },
+    { title: "Children of Blood and Bone", author: "Tomi Adeyemi" },
+    { title: "City of Bones", author: "Cassandra Clare" },
+    { title: "Throne of Glass", author: "Sarah J. Maas" },
+    { title: "The Maze Runner", author: "James Dashner" },
+    { title: "The Lightning Thief", author: "Rick Riordan" },
+    { title: "Wonder", author: "R.J. Palacio" },
+    { title: "Simon vs the Homo Sapiens Agenda", author: "Becky Albertalli" },
+    { title: "Aristotle and Dante Discover the Secrets of the Universe", author: "Benjamin Alire Saenz" },
+    { title: "The Cruel Prince", author: "Holly Black" },
+    { title: "Caraval", author: "Stephanie Garber" },
+];
+
+const MYSTERY_BOOKS = [
+    { title: "The Silent Patient", author: "Alex Michaelides" },
+    { title: "And Then There Were None", author: "Agatha Christie" },
+    { title: "Murder on the Orient Express", author: "Agatha Christie" },
+    { title: "The Thursday Murder Club", author: "Richard Osman" },
+    { title: "The Maid", author: "Nita Prose" },
+    { title: "The Inheritance Games", author: "Jennifer Lynn Barnes" },
+    { title: "The Final Gambit", author: "Jennifer Lynn Barnes" },
+    { title: "The Naturals", author: "Jennifer Lynn Barnes" },
+    { title: "The Guest List", author: "Lucy Foley" },
+    { title: "In a Dark Dark Wood", author: "Ruth Ware" },
+    { title: "Rock Paper Scissors", author: "Alice Feeney" },
+    { title: "Finlay Donovan Is Killing It", author: "Elle Cosimano" },
+    { title: "Local Woman Missing", author: "Mary Kubica" },
+    { title: "The Sanatorium", author: "Sarah Pearse" },
+    { title: "The Plot", author: "Jean Hanff Korelitz" },
+    { title: "Lessons in Chemistry", author: "Bonnie Garmus" },
+    { title: "Truly Devious", author: "Maureen Johnson" },
+    { title: "Big Little Lies", author: "Liane Moriarty" },
+    { title: "The Christie Affair", author: "Nina de Gramont" },
+    { title: "The Death of Mrs Westaway", author: "Ruth Ware" },
+    { title: "Pretty Girls", author: "Karin Slaughter" },
+    { title: "The Woman in Cabin 10", author: "Ruth Ware" },
+    { title: "Nothing to See Here", author: "Kevin Wilson" },
+    { title: "The Last Murder at the End of the World", author: "Stuart Turton" },
+];
+
+const SCIFI_BOOKS = [
+    { title: "The Hitchhikers Guide to the Galaxy", author: "Douglas Adams" },
+    { title: "Dune", author: "Frank Herbert" },
+    { title: "Enders Game", author: "Orson Scott Card" },
+    { title: "Ready Player One", author: "Ernest Cline" },
+    { title: "The Martian", author: "Andy Weir" },
+    { title: "Project Hail Mary", author: "Andy Weir" },
+    { title: "Red Rising", author: "Pierce Brown" },
+    { title: "The Handmaids Tale", author: "Margaret Atwood" },
+    { title: "Never Let Me Go", author: "Kazuo Ishiguro" },
+    { title: "Klara and the Sun", author: "Kazuo Ishiguro" },
+    { title: "Dark Matter", author: "Blake Crouch" },
+    { title: "Recursion", author: "Blake Crouch" },
+    { title: "Upgrade", author: "Blake Crouch" },
+    { title: "The Long Way to a Small Angry Planet", author: "Becky Chambers" },
+    { title: "A Memory Called Empire", author: "Arkady Martine" },
+    { title: "Piranesi", author: "Susanna Clarke" },
+    { title: "All Systems Red", author: "Martha Wells" },
+    { title: "The Three-Body Problem", author: "Liu Cixin" },
+    { title: "Station Eleven", author: "Emily St. John Mandel" },
+    { title: "The Power", author: "Naomi Alderman" },
+    { title: "Children of Time", author: "Adrian Tchaikovsky" },
+    { title: "Flowers for Algernon", author: "Daniel Keyes" },
+    { title: "The Kaiju Preservation Society", author: "John Scalzi" },
+    { title: "Starter Villain", author: "John Scalzi" },
+];
+
+const CATEGORIES = [
+    { key: 'foryou',       label: '✨ For You',         type: 'foryou' },
+    { key: 'booktok',      label: '🔥 BookTok Picks',   type: 'curated', books: BOOKTOK_BOOKS,      fallbackQuery: 'booktok romance bestseller' },
+    { key: 'romance',      label: '💕 Romance',          type: 'curated', books: ROMANCE_BOOKS,      fallbackQuery: 'romance novel bestseller' },
+    { key: 'dark_romance', label: '🖤 Dark Romance',     type: 'curated', books: DARK_ROMANCE_BOOKS,  fallbackQuery: 'dark romance possessive love story' },
+    { key: 'thriller',     label: '🔪 Thriller',         type: 'curated', books: THRILLER_BOOKS,     fallbackQuery: 'psychological thriller suspense' },
+    { key: 'fantasy',      label: '✨ Fantasy',           type: 'curated', books: FANTASY_BOOKS,      fallbackQuery: 'epic fantasy magic bestseller' },
+    { key: 'contemporary', label: '🌸 Contemporary',     type: 'curated', books: CONTEMPORARY_BOOKS, fallbackQuery: 'contemporary literary fiction' },
+    { key: 'ya',           label: '🎒 YA',               type: 'curated', books: YA_BOOKS,           fallbackQuery: 'young adult bestseller coming of age' },
+    { key: 'mystery',      label: '🕵️ Mystery',          type: 'curated', books: MYSTERY_BOOKS,      fallbackQuery: 'cozy mystery whodunit bestseller' },
+    { key: 'scifi',        label: '🚀 Sci-Fi',           type: 'curated', books: SCIFI_BOOKS,        fallbackQuery: 'science fiction bestseller award' },
+];
+
+const FALLBACK_COLORS = [
+    'linear-gradient(145deg,#2C2C3E,#1A1A2E)',
+    'linear-gradient(145deg,#4A7B9D,#2C5F7A)',
+    'linear-gradient(145deg,#8B1A1A,#5C0E0E)',
+    'linear-gradient(145deg,#C4782A,#8B5210)',
+    'linear-gradient(145deg,#1E3A5F,#0F2240)',
+    'linear-gradient(145deg,#2D6A4F,#1B4332)',
+    'linear-gradient(145deg,#6B3FA0,#3D1D6E)',
+    'linear-gradient(145deg,#880E4F,#560027)',
+];
+
+const PET_MSGS = {
+    foryou:       'Picked just for you based on what you love 💕',
+    booktok:      'These are all over TikTok rn 🔥',
+    romance:      'Your heart is going to go through it 💕',
+    dark_romance: 'Morally grey love interests incoming 🖤',
+    thriller:     'No spoilers! Sleep is optional 🔪',
+    fantasy:      'Whole new worlds await ✨',
+    contemporary: 'These will feel like a warm hug 🌸',
+    ya:           'Okay these ones make me cry 🎒',
+    mystery:      'Can you solve it before the end? 🕵️',
+    scifi:        'To infinity and beyond 🚀',
+};
+
+// ──────────────────────────────────────────
+// Shelf helpers
+// ──────────────────────────────────────────
+function isOnShelf(title, author) {
+    return window.mochiGetBooks().some(b =>
+        b.title.toLowerCase().trim() === title.toLowerCase().trim() &&
+        b.author.toLowerCase().trim() === author.toLowerCase().trim()
+    );
+}
+
+function addToShelf(title, author, coverId, status) {
+    if (isOnShelf(title, author)) return;
+    const fallback = FALLBACK_COLORS[Math.floor(Math.random() * FALLBACK_COLORS.length)];
+    const newBook = {
+        id: 'book_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+        title, author, status,
+        rating: null, tags: [], notes: '', favourite: false,
+        coverId: coverId || null, pageCount: null,
+        fallbackColor: fallback, dateAdded: Date.now(),
+        dateFinished: status === 'read' ? Date.now() : null,
+    };
+    window.mochiGetBooks().unshift(newBook);
+    window.mochiInsertBook(newBook).catch(err => {
+        console.error('Discover insert failed:', err);
+    });
+}
+
+// ──────────────────────────────────────────
+// Personalization algorithm
+// ──────────────────────────────────────────
+function buildForYouQueries() {
+    const books = window.mochiGetBooks();
+    if (!books.length) return ['romance fiction bestseller', 'fantasy novel popular', 'contemporary romance'];
+
+    const readBooks = books.filter(b => b.status === 'read');
+    const highRated = readBooks.filter(b => (b.rating || 0) >= 4);
+    const source = highRated.length ? highRated : readBooks.length ? readBooks : books;
+
+    // Top tags
+    const tagCounts = {};
+    source.forEach(b => (b.tags || []).forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
+    const topTags = Object.entries(tagCounts).sort((a,b) => b[1]-a[1]).slice(0,3).map(e => e[0]);
+
+    // Top authors
+    const authorCounts = {};
+    source.forEach(b => { authorCounts[b.author] = (authorCounts[b.author] || 0) + 1; });
+    const topAuthors = Object.entries(authorCounts).sort((a,b) => b[1]-a[1]).slice(0,2).map(e => e[0]);
+
+    const queries = [];
+    topTags.forEach(tag => queries.push(`${tag} novel fiction`));
+    topAuthors.forEach(author => queries.push(`books similar to ${author}`));
+
+    // Fallbacks by status patterns
+    if (!queries.length) {
+        if (books.some(b => b.status === 'read')) queries.push('romance bestseller', 'fantasy fiction');
+        else queries.push('popular fiction bestseller', 'contemporary romance novel');
+    }
+
+    return queries;
+}
+
+// ──────────────────────────────────────────
+// Fetching
+// ──────────────────────────────────────────
+const descriptionCache = {};
+
+function cleanText(str) {
+    if (!str) return '';
+    return str
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')   // [text](url) → text
+        .replace(/https?:\/\/\S+/g, '')              // bare URLs
+        .replace(/\*\*?([^*]+)\*\*?/g, '$1')        // **bold** / *italic*
+        .replace(/\n+/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+}
+
+async function fetchSearch(query, page = 1) {
+    const q = encodeURIComponent(query);
+    const offset = (page - 1) * 20;
+    const res = await fetch(
+        `https://openlibrary.org/search.json?q=${q}&limit=20&offset=${offset}&fields=title,author_name,cover_i,first_sentence,subject,key`
+    );
+    const data = await res.json();
+    return (data.docs || [])
+        .map(d => ({
+            title: d.title,
+            author: (d.author_name || ['Unknown'])[0],
+            coverId: d.cover_i || null,
+            blurb: cleanText(d.first_sentence?.value || ''),
+            subjects: (d.subject || []).slice(0, 3),
+            key: d.key || '',
+        }));
+}
+
+async function fetchCurated(cat, page = 1) {
+    const bookList = cat.books || [];
+    const pageSize = 12;
+    const start = (page - 1) * pageSize;
+
+    if (start < bookList.length) {
+        const batch = bookList.slice(start, start + pageSize);
+        const results = await Promise.allSettled(batch.map(async b => {
+            const q = encodeURIComponent(`${b.title} ${b.author}`);
+            const res = await fetch(`https://openlibrary.org/search.json?q=${q}&limit=1&fields=title,author_name,cover_i,first_sentence,subject,key`);
+            const data = await res.json();
+            const doc = data.docs?.[0];
+            return {
+                title: b.title, author: b.author,
+                coverId: doc?.cover_i || null,
+                blurb: cleanText(doc?.first_sentence?.value || ''),
+                subjects: (doc?.subject || []).slice(0, 3),
+                key: doc?.key || '',
+            };
+        }));
+        return results.filter(r => r.status === 'fulfilled').map(r => r.value);
+    }
+
+    // Curated list exhausted — keep scrolling with a genre search
+    if (cat.fallbackQuery) {
+        const searchPage = Math.ceil((start - bookList.length) / pageSize) + 1;
+        return fetchSearch(cat.fallbackQuery, searchPage);
+    }
+    return [];
+}
+
+async function fetchForYou(page = 1) {
+    const queries = buildForYouQueries();
+    const shelfTitles = new Set(window.mochiGetBooks().map(b => b.title.toLowerCase().trim()));
+
+    // Round-robin across queries for variety
+    const query = queries[(page - 1) % queries.length];
+    const results = await fetchSearch(query, Math.ceil(page / queries.length));
+
+    // Filter out books already on shelf
+    return results.filter(b => !shelfTitles.has(b.title.toLowerCase().trim()));
+}
+
+// Lazy-fetch description from Works API for a single book
+async function fetchDescription(key) {
+    if (!key) return '';
+    if (descriptionCache[key] !== undefined) return descriptionCache[key];
+    try {
+        const workKey = key.replace('/works/', '');
+        const res = await fetch(`https://openlibrary.org/works/${workKey}.json`);
+        const data = await res.json();
+        const raw = typeof data.description === 'string'
+            ? data.description
+            : data.description?.value || '';
+        descriptionCache[key] = cleanText(raw);
+        return descriptionCache[key];
+    } catch (_) {
+        descriptionCache[key] = '';
+        return '';
+    }
+}
+
+// ──────────────────────────────────────────
+// Render
+// ──────────────────────────────────────────
+function renderSkeletons(count = 12) {
+    const grid = document.getElementById('discoverGrid');
+    let html = '';
+    for (let i = 0; i < count; i++) {
+        html += `<div class="skeleton-card">
+            <div class="skeleton sk-cover"></div>
+            <div class="skeleton sk-title"></div>
+            <div class="skeleton sk-author"></div>
+            <div class="skeleton sk-blurb"></div>
+            <div class="skeleton sk-blurb2"></div>
+            <div class="skeleton sk-btn"></div>
+        </div>`;
+    }
+    grid.innerHTML = html;
+}
+
+function appendSkeletons(count = 6) {
+    const grid = document.getElementById('discoverGrid');
+    const spinner = document.createElement('div');
+    spinner.className = 'load-more-spinner';
+    spinner.id = 'loadSpinner';
+    spinner.textContent = '🐰';
+    grid.appendChild(spinner);
+}
+
+function createCard(book, onShelf, colorIdx) {
+    const card = document.createElement('div');
+    card.className = 'discover-card';
+    const fallback = FALLBACK_COLORS[colorIdx % FALLBACK_COLORS.length];
+
+    const subjectsHTML = book.subjects?.length
+        ? `<div class="disc-subjects">${book.subjects.slice(0,2).map(s => `<span class="disc-subject">${s}</span>`).join('')}</div>`
+        : '';
+
+    const blurbHTML = book.blurb
+        ? `<div class="disc-blurb" id="blurb-${colorIdx}">${book.blurb}</div>`
+        : `<div class="disc-blurb" id="blurb-${colorIdx}"></div>`;
+
+    card.innerHTML = `
+        <div class="disc-cover-wrap">
+            <div class="disc-cover-loader"></div>
+            <img style="display:none" alt="${book.title} cover">
+            <div class="disc-cover-fallback" style="background:${fallback}">
+                <span class="disc-fb-title">${book.title}</span>
+            </div>
+            ${onShelf ? '<span class="on-shelf-badge">On shelf ✓</span>' : ''}
+        </div>
+        <div class="disc-title">${book.title}</div>
+        <div class="disc-author">${book.author}</div>
+        ${blurbHTML}
+        ${subjectsHTML}
+        <div class="add-wrap">
+            ${onShelf
+                ? `<div class="btn-on-shelf">✓ On your shelf</div>`
+                : `<button class="btn-add">＋ Add to shelf</button>
+                   <div class="status-picker">
+                       <button class="btn-status" data-status="want">🌙<br>Want</button>
+                       <button class="btn-status" data-status="reading">📖<br>Reading</button>
+                       <button class="btn-status" data-status="read">✓<br>Read it</button>
+                   </div>`
+            }
+        </div>
+    `;
+
+    // Load cover
+    const img = card.querySelector('img');
+    const fallbackEl = card.querySelector('.disc-cover-fallback');
+    const loader = card.querySelector('.disc-cover-loader');
+    if (book.coverId) {
+        img.src = `https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg`;
+        img.onload = () => { loader.remove(); img.style.display = 'block'; };
+        img.onerror = () => { loader.remove(); fallbackEl.style.display = 'flex'; };
+    } else {
+        loader.remove(); fallbackEl.style.display = 'flex';
+    }
+
+    // Click cover → open detail modal
+    card.querySelector('.disc-cover-wrap').addEventListener('click', () => openBookModal(book));
+
+    // Lazy-load description if blurb missing and we have a key
+    if (!book.blurb && book.key) {
+        fetchDescription(book.key).then(desc => {
+            const el = card.querySelector('.disc-blurb');
+            if (el && desc) el.textContent = desc;
+        });
+    }
+
+    if (onShelf) return card;
+
+    const addBtn = card.querySelector('.btn-add');
+    const picker = card.querySelector('.status-picker');
+
+    addBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        addBtn.style.display = 'none';
+        picker.classList.add('open');
+    });
+
+    picker.querySelectorAll('.btn-status').forEach(btn => {
+        btn.addEventListener('click', e => {
+            e.stopPropagation();
+            addToShelf(book.title, book.author, book.coverId, btn.dataset.status);
+            const wrap = card.querySelector('.add-wrap');
+            wrap.innerHTML = `<div class="btn-on-shelf">✓ On your shelf</div>`;
+            const coverWrap = card.querySelector('.disc-cover-wrap');
+            if (!coverWrap.querySelector('.on-shelf-badge')) {
+                const badge = document.createElement('span');
+                badge.className = 'on-shelf-badge';
+                badge.textContent = 'On shelf ✓';
+                coverWrap.appendChild(badge);
+            }
+        });
+    });
+
+    document.addEventListener('click', () => {
+        if (picker.classList.contains('open')) {
+            picker.classList.remove('open');
+            addBtn.style.display = '';
+        }
+    }, { once: true });
+
+    return card;
+}
+
+function appendBooks(books, startIdx) {
+    const grid = document.getElementById('discoverGrid');
+    const spinner = document.getElementById('loadSpinner');
+    if (spinner) spinner.remove();
+
+    if (!books.length) return;
+
+    books.forEach((book, i) => {
+        const onShelf = isOnShelf(book.title, book.author);
+        grid.appendChild(createCard(book, onShelf, startIdx + i));
+    });
+}
+
+// ──────────────────────────────────────────
+// State + infinite scroll
+// ──────────────────────────────────────────
+let activeKey = 'foryou';
+let currentPage = 1;
+let isLoading = false;
+let hasMore = true;
+let totalCardsRendered = 0;
+
+async function loadPage(key, page, replace = false) {
+    if (isLoading) return;
+    isLoading = true;
+
+    const cat = CATEGORIES.find(c => c.key === key);
+    const grid = document.getElementById('discoverGrid');
+
+    if (replace) { grid.innerHTML = ''; totalCardsRendered = 0; renderSkeletons(); }
+    else appendSkeletons();
+
+    try {
+        let books = [];
+        if (cat.type === 'foryou')   books = await fetchForYou(page);
+        else if (cat.type === 'curated') books = await fetchCurated(cat, page);
+        else books = await fetchSearch(cat.query, page);
+
+        if (replace) grid.innerHTML = '';
+
+        if (!books.length && page === 1) {
+            grid.innerHTML = `<div class="grid-message"><span class="msg-emoji">😢</span><p>Couldn't load books right now. Try another category!</p></div>`;
+            hasMore = false;
+        } else {
+            hasMore = books.length >= 10;
+            appendBooks(books, totalCardsRendered);
+            totalCardsRendered += books.length;
+        }
+    } catch (_) {
+        const spinner = document.getElementById('loadSpinner');
+        if (spinner) spinner.remove();
+        if (page === 1) {
+            grid.innerHTML = `<div class="grid-message"><span class="msg-emoji">😓</span><p>Something went wrong. Try again!</p></div>`;
+        }
+    }
+
+    isLoading = false;
+}
+
+function setupInfiniteScroll() {
+    const sentinel = document.getElementById('scrollSentinel');
+    const observer = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && !isLoading && hasMore) {
+            currentPage++;
+            loadPage(activeKey, currentPage, false);
+        }
+    }, { rootMargin: '400px' });
+    observer.observe(sentinel);
+}
+
+async function switchCategory(key) {
+    activeKey = key;
+    currentPage = 1;
+    hasMore = true;
+
+    document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.key === key));
+    document.getElementById('petMsg').textContent = PET_MSGS[key] || 'Find something good!';
+
+    await loadPage(key, 1, true);
+}
+
+// ──────────────────────────────────────────
+// Init
+// ──────────────────────────────────────────
+function init() {
+    const catsEl = document.getElementById('categories');
+    CATEGORIES.forEach(cat => {
+        const btn = document.createElement('button');
+        btn.className = `cat-btn${cat.key === activeKey ? ' active' : ''}`;
+        btn.dataset.key = cat.key;
+        btn.textContent = cat.label;
+        btn.addEventListener('click', () => switchCategory(cat.key));
+        catsEl.appendChild(btn);
+    });
+
+    setupInfiniteScroll();
+    switchCategory(activeKey);
+}
+
+// ──────────────────────────────────────────
+// Book detail modal
+// ──────────────────────────────────────────
+function openBookModal(book) {
+    const overlay = document.getElementById('bookModalOverlay');
+    const onShelf = isOnShelf(book.title, book.author);
+
+    // Cover
+    const coverEl = document.getElementById('modalCover');
+    if (book.coverId) {
+        coverEl.innerHTML = `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg" alt="${book.title}" onerror="this.style.display='none'">`;
+    } else {
+        const fallback = FALLBACK_COLORS[Math.floor(Math.random() * FALLBACK_COLORS.length)];
+        coverEl.innerHTML = `<div class="modal-cover-fallback" style="background:${fallback}">${book.title}</div>`;
+    }
+
+    document.getElementById('modalTitle').textContent = book.title;
+    document.getElementById('modalAuthor').textContent = 'by ' + book.author;
+    document.getElementById('modalSubjects').innerHTML = (book.subjects || []).slice(0, 4)
+        .map(s => `<span class="modal-subject">${s}</span>`).join('');
+
+    // Summary — use cached blurb first, then fetch full
+    const summaryEl = document.getElementById('modalSummary');
+    if (book.blurb) {
+        summaryEl.textContent = book.blurb;
+    } else {
+        summaryEl.innerHTML = '<span class="modal-summary-loading">Loading summary... 🌸</span>';
+    }
+
+    // Always try to get the full description
+    if (book.key) {
+        fetchDescription(book.key).then(desc => {
+            if (desc) summaryEl.textContent = desc;
+            else if (!book.blurb) summaryEl.textContent = 'No summary available for this book yet.';
+        });
+    } else if (!book.blurb) {
+        summaryEl.textContent = 'No summary available for this book yet.';
+    }
+
+    // Add to shelf actions
+    const actionsEl = document.getElementById('modalActions');
+    if (onShelf) {
+        actionsEl.innerHTML = `<div class="modal-btn-on-shelf">✓ Already on your shelf</div>`;
+    } else {
+        actionsEl.innerHTML = `
+            <div class="modal-summary-label" style="margin-bottom:10px">Add to shelf</div>
+            <div class="modal-status-row">
+                <button class="modal-status-btn" data-status="want">🌙 Want to read</button>
+                <button class="modal-status-btn" data-status="reading">📖 Reading</button>
+                <button class="modal-status-btn" data-status="read">✓ Read it</button>
+            </div>
+        `;
+        actionsEl.querySelectorAll('.modal-status-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                addToShelf(book.title, book.author, book.coverId, btn.dataset.status);
+                actionsEl.innerHTML = `<div class="modal-btn-on-shelf">✓ Added to your shelf</div>`;
+            });
+        });
+    }
+
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeBookModal() {
+    document.getElementById('bookModalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+document.getElementById('modalClose').addEventListener('click', closeBookModal);
+document.getElementById('bookModalOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('bookModalOverlay')) closeBookModal();
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeBookModal(); });
+
+window.initMochi(() => init());
+</script>
+
+</body>
+</html>

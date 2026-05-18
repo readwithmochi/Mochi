@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mochi — Your cozy reading companion</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --cream: #FFF8F5;
+            --pink-light: #F5C9D6;
+            --pink: #E8A0B4;
+            --pink-deep: #C97A8E;
+            --text: #4A3040;
+            --text-muted: #9B7B8A;
+            --white: #FFFFFF;
+        }
+
+        body {
+            background-color: var(--cream);
+            color: var(--text);
+            font-family: 'Nunito', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -200px;
+            right: -200px;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(245, 201, 214, 0.3) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -200px;
+            left: -200px;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(232, 197, 160, 0.2) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .decoration {
+            position: fixed;
+            font-size: 1.4rem;
+            opacity: 0.2;
+            animation: float 6s ease-in-out infinite;
+            pointer-events: none;
+            user-select: none;
+            z-index: 0;
+        }
+        .decoration:nth-child(1) { top: 8%;  left: 4%;  animation-delay: 0s;   }
+        .decoration:nth-child(2) { top: 18%; right: 6%; animation-delay: 1s;   }
+        .decoration:nth-child(3) { top: 55%; left: 2%;  animation-delay: 2s;   }
+        .decoration:nth-child(4) { top: 72%; right: 4%; animation-delay: 0.5s; }
+        .decoration:nth-child(5) { top: 38%; right: 2%; animation-delay: 1.5s; }
+        .decoration:nth-child(6) { top: 85%; left: 6%;  animation-delay: 3s;   }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px);   }
+            50%       { transform: translateY(-12px); }
+        }
+
+        header {
+            position: relative;
+            z-index: 1;
+            padding: 28px 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .logo-wordmark {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: var(--pink);
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        main {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Hero ── */
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 48px 24px 80px;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .bunny-emoji {
+            font-size: 6rem;
+            margin-bottom: 36px;
+            display: block;
+            animation: gentle-bob 4s ease-in-out infinite;
+        }
+
+        @keyframes gentle-bob {
+            0%, 100% { transform: translateY(0px);  }
+            50%       { transform: translateY(-6px); }
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--pink-light);
+            color: var(--pink-deep);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            padding: 6px 18px;
+            border-radius: 100px;
+            margin-bottom: 28px;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 5vw, 3.4rem);
+            line-height: 1.2;
+            color: var(--text);
+            margin-bottom: 20px;
+        }
+
+        h1 em {
+            color: var(--pink-deep);
+            font-style: italic;
+        }
+
+        .subheadline {
+            font-size: 1.05rem;
+            color: var(--text-muted);
+            line-height: 1.8;
+            margin-bottom: 48px;
+            max-width: 500px;
+            font-weight: 400;
+        }
+
+        /* ── CTA button ── */
+        .cta-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .cta-btn {
+            display: inline-block;
+            background: var(--pink);
+            color: var(--white);
+            font-family: 'Nunito', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 16px 36px;
+            border-radius: 14px;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 20px rgba(232, 160, 180, 0.45);
+            letter-spacing: 0.3px;
+        }
+
+        .cta-btn:hover {
+            background: var(--pink-deep);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(201, 122, 142, 0.45);
+        }
+
+        .cta-note {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* ── Divider ── */
+        .divider {
+            text-align: center;
+            color: var(--pink-light);
+            font-size: 1rem;
+            letter-spacing: 10px;
+            padding: 16px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Features ── */
+        .features {
+            padding: 72px 24px 80px;
+            max-width: 880px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .features-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.7rem;
+            text-align: center;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+
+        .features-subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 48px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-card {
+            background: var(--white);
+            border-radius: 22px;
+            padding: 32px 24px;
+            text-align: center;
+            box-shadow: 0 2px 20px rgba(232, 160, 180, 0.1);
+            border: 1.5px solid var(--pink-light);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 32px rgba(232, 160, 180, 0.2);
+        }
+
+        .feature-icon {
+            font-size: 2.4rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.05rem;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.65;
+        }
+
+        /* ── Preview section ── */
+        .preview {
+            padding: 24px 24px 80px;
+            max-width: 860px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+
+        .preview-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.7rem;
+            color: var(--text);
+            margin-bottom: 12px;
+        }
+
+        .preview-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 40px;
+        }
+
+        .browser-mockup {
+            display: block;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 24px 64px rgba(74, 48, 64, 0.14);
+            border: 1.5px solid var(--pink-light);
+            text-decoration: none;
+            transition: transform 0.3s, box-shadow 0.3s;
+            background: #FDF8FA;
+        }
+
+        .browser-mockup:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 36px 80px rgba(74, 48, 64, 0.2);
+        }
+
+        .browser-bar {
+            background: #f5eff2;
+            border-bottom: 1.5px solid var(--pink-light);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .browser-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .browser-dots span {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--pink-light);
+        }
+
+        .browser-address {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 4px 12px;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-align: left;
+            border: 1px solid var(--pink-light);
+        }
+
+        .mockup-body {
+            padding: 20px 24px 24px;
+            position: relative;
+        }
+
+        .mockup-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .mockup-logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.95rem;
+            color: var(--pink-deep);
+            font-weight: 700;
+        }
+
+        .mockup-links {
+            display: flex;
+            gap: 6px;
+        }
+
+        .mockup-link {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            padding: 5px 10px;
+            border-radius: 8px;
+        }
+
+        .mockup-link.active {
+            background: var(--pink-light);
+            color: var(--pink-deep);
+        }
+
+        .mockup-shelf {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .mockup-book {
+            border-radius: 10px;
+            aspect-ratio: 2/3;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 8px;
+            box-shadow: 0 4px 14px rgba(74, 48, 64, 0.18);
+        }
+
+        .mockup-badge {
+            font-size: 0.55rem;
+            font-weight: 700;
+            background: rgba(255, 255, 255, 0.92);
+            color: var(--pink-deep);
+            padding: 3px 7px;
+            border-radius: 100px;
+            align-self: flex-end;
+            white-space: nowrap;
+            letter-spacing: 0.3px;
+        }
+
+        .mockup-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.68rem;
+            color: white;
+            font-weight: 700;
+            line-height: 1.3;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .mockup-pet {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            border: 1.5px solid var(--pink-light);
+            border-radius: 14px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 1.2rem;
+            box-shadow: 0 4px 16px rgba(232, 160, 180, 0.2);
+        }
+
+        .mockup-pet-msg {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .preview-cta {
+            margin-top: 22px;
+        }
+
+        .preview-cta a {
+            color: var(--pink-deep);
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-decoration: none;
+            border-bottom: 1.5px solid var(--pink-light);
+            padding-bottom: 2px;
+            transition: border-color 0.2s, color 0.2s;
+        }
+
+        .preview-cta a:hover {
+            color: var(--text);
+            border-color: var(--text-muted);
+        }
+
+        /* ── Footer ── */
+        footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 36px 24px 56px;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+
+        footer span {
+            color: var(--pink);
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            header { padding: 20px; }
+            .hero  { padding: 36px 20px 56px; }
+            .bunny-emoji { font-size: 4.5rem; }
+            h1 { font-size: 2rem; }
+            .mockup-shelf { grid-template-columns: repeat(2, 1fr); }
+            .mockup-link:last-child { display: none; }
+            .mockup-pet { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="decoration">🌸</div>
+    <div class="decoration">📖</div>
+    <div class="decoration">✨</div>
+    <div class="decoration">🍃</div>
+    <div class="decoration">🌷</div>
+    <div class="decoration">⭐</div>
+
+    <header>
+        <span class="logo-wordmark">✦ Mochi ✦</span>
+    </header>
+
+    <main>
+        <section class="hero">
+
+            <span class="bunny-emoji">🐰</span>
+
+            <span class="badge">Now live ✦</span>
+
+            <h1>Your reading life,<br><em>beautifully tracked.</em></h1>
+
+            <p class="subheadline">
+                Mochi is the cozy reading tracker your bookshelf deserves — a mood-board for your reads,
+                a diary for your feelings, and a little pet who actually cares if you finish the chapter.
+            </p>
+
+            <div class="cta-wrap">
+                <a href="shelf.html" class="cta-btn">Open my shelf ✦</a>
+                <p class="cta-note">Free to use — just create an account and you're in. 🌸</p>
+            </div>
+
+        </section>
+
+        <div class="divider">✦ &nbsp; ✦ &nbsp; ✦</div>
+
+        <section class="features">
+            <h2 class="features-title">What's waiting inside</h2>
+            <p class="features-subtitle">A sneak peek at the cozy world we're building for you.</p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">🖼️</span>
+                    <h3>Your Mood-Board Shelf</h3>
+                    <p>A gorgeous visual grid of every book you've read — cover art, colour palettes, and mood tags that actually match how the book made you feel.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🐾</span>
+                    <h3>Your Reading Pet</h3>
+                    <p>Pick a personality companion who checks in on you. Grumpy, cutesy, or chill — they level up the more you read and unlock surprises along the way.</p>
+                </div>
+                <div class="feature-card">
+                    <span class="feature-icon">🎁</span>
+                    <h3>Reading Wrapped</h3>
+                    <p>Every December, a beautiful shareable graphic of your entire reading year. Post it. Make your feed the most aesthetic thing anyone has ever seen.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="divider">✦ &nbsp; ✦ &nbsp; ✦</div>
+
+        <section class="preview">
+            <h2 class="preview-title">Here's what your shelf looks like</h2>
+            <p class="preview-subtitle">Your real books, your real ratings, all in one cozy place.</p>
+
+            <a class="browser-mockup" href="shelf.html" target="_blank">
+                <div class="browser-bar">
+                    <div class="browser-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div class="browser-address">mochi.app/my-shelf</div>
+                </div>
+                <div class="mockup-body">
+                    <div class="mockup-nav">
+                        <span class="mockup-logo">🐰 Mochi</span>
+                        <div class="mockup-links">
+                            <span class="mockup-link active">My Shelf</span>
+                            <span class="mockup-link">Discover</span>
+                            <span class="mockup-link">My Pet</span>
+                        </div>
+                    </div>
+                    <div class="mockup-shelf">
+                        <div class="mockup-book" style="background: linear-gradient(145deg, #2C2C3E, #1A1A2E)">
+                            <span class="mockup-badge">Read ✓</span>
+                            <span class="mockup-title">The Boyfriend</span>
+                        </div>
+                        <div class="mockup-book" style="background: linear-gradient(145deg, #8B1A1A, #5C0E0E)">
+                            <span class="mockup-badge">Reading 📖</span>
+                            <span class="mockup-title">King of Wrath</span>
+                        </div>
+                        <div class="mockup-book" style="background: linear-gradient(145deg, #C4782A, #8B5210)">
+                            <span class="mockup-badge">Read ✓</span>
+                            <span class="mockup-title">Twisted Love</span>
+                        </div>
+                        <div class="mockup-book" style="background: linear-gradient(145deg, #6B3FA0, #3D1D6E)">
+                            <span class="mockup-badge">Read ✓</span>
+                            <span class="mockup-title">Twisted Lies</span>
+                        </div>
+                    </div>
+                    <div class="mockup-pet">
+                        <span>🐰</span>
+                        <span class="mockup-pet-msg">4-day streak! 🌸</span>
+                    </div>
+                </div>
+            </a>
+
+            <p class="preview-cta">
+                <a href="shelf.html" target="_blank">Explore the full demo →</a>
+            </p>
+        </section>
+
+    </main>
+
+    <div class="divider">✦ &nbsp; ✦ &nbsp; ✦</div>
+
+    <footer>
+        <p>Made with love for readers who care about the <span>aesthetic</span></p>
+        <p style="margin-top:8px">© 2026 Mochi. All rights reserved. Unauthorized reproduction or use of this platform, design, or concept is prohibited.</p>
+    </footer>
+
+</body>
+</html>

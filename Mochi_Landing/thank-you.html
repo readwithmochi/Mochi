@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mochi — You're on the list!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --cream: #FFF8F5;
+            --pink-light: #F5C9D6;
+            --pink: #E8A0B4;
+            --pink-deep: #C97A8E;
+            --text: #4A3040;
+            --text-muted: #9B7B8A;
+            --white: #FFFFFF;
+        }
+
+        body {
+            background-color: var(--cream);
+            color: var(--text);
+            font-family: 'Nunito', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 24px;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -200px; right: -200px;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(245, 201, 214, 0.3) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -200px; left: -200px;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(232, 197, 160, 0.2) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .decoration {
+            position: fixed;
+            font-size: 1.4rem;
+            opacity: 0.2;
+            animation: float 6s ease-in-out infinite;
+            pointer-events: none;
+            user-select: none;
+        }
+        .decoration:nth-child(1) { top: 8%;  left: 4%;  animation-delay: 0s;   }
+        .decoration:nth-child(2) { top: 18%; right: 6%; animation-delay: 1s;   }
+        .decoration:nth-child(3) { top: 55%; left: 2%;  animation-delay: 2s;   }
+        .decoration:nth-child(4) { top: 72%; right: 4%; animation-delay: 0.5s; }
+        .decoration:nth-child(5) { top: 38%; right: 2%; animation-delay: 1.5s; }
+        .decoration:nth-child(6) { top: 85%; left: 6%;  animation-delay: 3s;   }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px);   }
+            50%       { transform: translateY(-12px); }
+        }
+
+        .card {
+            position: relative;
+            z-index: 1;
+            background: var(--white);
+            border-radius: 28px;
+            padding: 56px 48px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 8px 40px rgba(232, 160, 180, 0.15);
+            border: 1.5px solid var(--pink-light);
+        }
+
+        .emoji {
+            font-size: 4rem;
+            margin-bottom: 24px;
+            display: block;
+            animation: gentle-bob 4s ease-in-out infinite;
+        }
+
+        @keyframes gentle-bob {
+            0%, 100% { transform: translateY(0px);  }
+            50%       { transform: translateY(-6px); }
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            color: var(--text);
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        h1 em {
+            color: var(--pink-deep);
+            font-style: italic;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 0.98rem;
+            line-height: 1.75;
+            margin-bottom: 32px;
+        }
+
+        .divider {
+            color: var(--pink-light);
+            letter-spacing: 8px;
+            margin-bottom: 28px;
+            font-size: 0.9rem;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: var(--pink-deep);
+            font-size: 0.88rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1.5px solid var(--pink-light);
+            padding-bottom: 2px;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--text);
+            border-color: var(--text-muted);
+        }
+
+        .wordmark {
+            font-family: 'Playfair Display', serif;
+            color: var(--pink);
+            font-size: 1rem;
+            margin-top: 32px;
+            position: relative;
+            z-index: 1;
+        }
+
+        @media (max-width: 500px) {
+            .card { padding: 40px 28px; }
+            h1 { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="decoration">🌸</div>
+    <div class="decoration">📖</div>
+    <div class="decoration">✨</div>
+    <div class="decoration">🍃</div>
+    <div class="decoration">🌷</div>
+    <div class="decoration">⭐</div>
+
+    <div class="card">
+        <span class="emoji">🐰</span>
+        <h1>You're on the list,<br><em>bestie.</em></h1>
+        <p>
+            Mochi can't wait to meet you. We'll send you a little note the moment we're ready —
+            until then, maybe go read a chapter or two. 🌸
+        </p>
+        <div class="divider">✦ &nbsp; ✦ &nbsp; ✦</div>
+        <a class="back-link" href="/">← Take me back</a>
+    </div>
+
+    <p class="wordmark">✦ Mochi ✦</p>
+
+</body>
+</html>

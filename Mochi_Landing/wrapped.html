@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mochi — Reading Wrapped</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --pink-soft: #FAE8EF;
+            --pink-light: #F5C9D6;
+            --pink: #E8A0B4;
+            --pink-deep: #C97A8E;
+            --text: #4A3040;
+            --text-muted: #9B7B8A;
+            --border: #F0DDE5;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        /* ── Header ── */
+        header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1.5px solid var(--border);
+            padding: 15px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo-area { display: flex; align-items: center; gap: 8px; }
+        .logo-bunny { font-size: 1.4rem; }
+        .logo-wordmark { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--pink-deep); font-weight: 700; }
+        nav { display: flex; gap: 4px; }
+        nav a { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-decoration: none; padding: 7px 14px; border-radius: 10px; transition: all 0.2s; }
+        nav a:hover, nav a.active { background: var(--pink-soft); color: var(--pink-deep); }
+
+        /* ── Progress dots ── */
+        .progress-dots {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: rgba(201,122,142,0.25);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .dot.active { background: var(--pink-deep); transform: scale(1.4); }
+
+        @media (max-width: 600px) { .progress-dots { display: none; } }
+
+        /* ── Sections ── */
+        .wrapped-section {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 100px 32px 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Fade-in animation */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .fade-up.visible { opacity: 1; transform: translateY(0); }
+        .fade-up.delay-1 { transition-delay: 0.15s; }
+        .fade-up.delay-2 { transition-delay: 0.3s; }
+        .fade-up.delay-3 { transition-delay: 0.45s; }
+        .fade-up.delay-4 { transition-delay: 0.6s; }
+
+        /* ── Section labels ── */
+        .section-label {
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.6;
+            margin-bottom: 16px;
+        }
+
+        .section-big {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.4rem, 7vw, 5rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 16px;
+        }
+
+        .section-lead {
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            opacity: 0.75;
+            max-width: 480px;
+            line-height: 1.7;
+        }
+
+        /* ─────────────────────── */
+        /* Section 1: Hero         */
+        /* ─────────────────────── */
+        .s-hero {
+            background: linear-gradient(160deg, #FDF8FA 0%, #FAE8EF 50%, #F5C9D6 100%);
+        }
+        .hero-year {
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            font-weight: 800;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--pink-deep);
+            margin-bottom: 12px;
+        }
+        .hero-title {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 9vw, 6.5rem);
+            font-weight: 700;
+            line-height: 1.05;
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+        .hero-title em { color: var(--pink-deep); font-style: italic; }
+        .hero-sub { font-size: clamp(0.9rem, 2vw, 1.1rem); color: var(--text-muted); margin-bottom: 40px; }
+        .hero-bunny { font-size: 4rem; margin-bottom: 24px; animation: float 3s ease-in-out infinite; }
+        @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        .scroll-hint {
+            position: absolute;
+            bottom: 32px;
+            left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
+            letter-spacing: 1px; text-transform: uppercase;
+            animation: hint-fade 2s ease-in-out 2s infinite;
+        }
+        .scroll-arrow { font-size: 1.1rem; animation: bounce 1.5s ease-in-out infinite; }
+        @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+        @keyframes hint-fade { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+        /* ─────────────────────── */
+        /* Section 2: Numbers      */
+        /* ─────────────────────── */
+        .s-numbers { background: #1E0F1A; color: #fff; }
+        .s-numbers .section-label { color: var(--pink-light); }
+
+        .numbers-grid {
+            display: flex;
+            gap: clamp(32px, 6vw, 80px);
+            margin: 32px 0 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .big-number { text-align: center; }
+        .big-number-val {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(4rem, 12vw, 8rem);
+            font-weight: 700;
+            color: var(--pink);
+            line-height: 1;
+        }
+        .big-number-label {
+            font-size: clamp(0.8rem, 1.5vw, 0.95rem);
+            font-weight: 700;
+            color: rgba(255,255,255,0.55);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-top: 8px;
+        }
+
+        .book-dots {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            max-width: 360px;
+            margin: 0 auto;
+        }
+        .book-dot {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem;
+        }
+        .fun-fact {
+            margin-top: 24px;
+            font-size: clamp(0.82rem, 1.5vw, 0.92rem);
+            color: rgba(255,255,255,0.45);
+            font-style: italic;
+        }
+
+        /* ─────────────────────── */
+        /* Section 3: Rhythm       */
+        /* ─────────────────────── */
+        .s-rhythm { background: #FEF5E8; }
+        .s-rhythm .section-label { color: #C4956A; }
+        .s-rhythm .section-big { color: #4A3020; }
+
+        .month-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: clamp(6px, 1.5vw, 14px);
+            height: 140px;
+            margin: 32px auto 12px;
+            padding: 0 8px;
+        }
+        .bar-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+        }
+        .bar {
+            width: 100%;
+            max-width: 36px;
+            border-radius: 6px 6px 2px 2px;
+            background: #E8C9A0;
+            transition: height 1s cubic-bezier(0.34,1.56,0.64,1);
+            min-height: 4px;
+            position: relative;
+        }
+        .bar.best { background: #C4956A; }
+        .bar.has-books { background: var(--pink); }
+        .bar.best.has-books { background: var(--pink-deep); }
+        .bar-count {
+            position: absolute;
+            top: -22px; left: 50%; transform: translateX(-50%);
+            font-size: 0.68rem; font-weight: 800;
+            color: var(--pink-deep);
+            white-space: nowrap;
+        }
+        .bar-label {
+            font-size: clamp(0.6rem, 1.2vw, 0.72rem);
+            font-weight: 700;
+            color: #9B7B5A;
+        }
+        .best-month-callout {
+            background: var(--pink-deep);
+            color: #fff;
+            border-radius: 100px;
+            padding: 8px 20px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            display: inline-block;
+            margin-top: 20px;
+        }
+
+        /* ─────────────────────── */
+        /* Section 4: Author       */
+        /* ─────────────────────── */
+        .s-author { background: #EEF7F2; }
+        .s-author .section-label { color: #5A9070; }
+
+        .author-name {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.2rem, 7vw, 4.5rem);
+            font-weight: 700;
+            color: #2A4A38;
+            line-height: 1.1;
+            margin: 12px 0 8px;
+        }
+        .author-count {
+            font-size: clamp(0.85rem, 2vw, 1rem);
+            color: #5A9070;
+            font-weight: 700;
+            margin-bottom: 28px;
+        }
+        .author-books {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .author-book-spine {
+            width: 18px;
+            border-radius: 2px 3px 3px 2px;
+            box-shadow: 2px 0 6px rgba(0,0,0,0.12);
+        }
+
+        /* ─────────────────────── */
+        /* Section 5: Vibe         */
+        /* ─────────────────────── */
+        .s-vibe { /* background set by JS */ }
+        .vibe-word {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.6rem, 8vw, 5.5rem);
+            font-weight: 700;
+            font-style: italic;
+            line-height: 1.05;
+            margin: 16px 0 20px;
+        }
+        .vibe-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            max-width: 400px;
+            margin: 0 auto 24px;
+        }
+        .vibe-tag {
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            border: 2px solid currentColor;
+            opacity: 0.8;
+        }
+
+        /* ─────────────────────── */
+        /* Section 6: Top Books    */
+        /* ─────────────────────── */
+        .s-top { background: #FDF8FA; }
+        .top-books {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 32px 0 0;
+        }
+        .top-book-card {
+            width: 130px;
+            text-align: center;
+        }
+        .top-book-cover {
+            width: 100px;
+            height: 150px;
+            border-radius: 10px;
+            object-fit: cover;
+            margin: 0 auto 10px;
+            display: block;
+            box-shadow: 0 8px 24px rgba(74,48,64,0.18);
+        }
+        .top-book-cover-fallback {
+            width: 100px; height: 150px;
+            border-radius: 10px;
+            margin: 0 auto 10px;
+            display: flex; align-items: center; justify-content: center;
+            padding: 10px;
+            box-shadow: 0 8px 24px rgba(74,48,64,0.15);
+        }
+        .top-book-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.3;
+            margin-bottom: 4px;
+        }
+        .top-book-stars { font-size: 0.72rem; letter-spacing: 1px; }
+        .top-book-rank {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--pink-deep);
+            margin-bottom: 8px;
+        }
+
+        .no-five-star {
+            background: var(--pink-soft);
+            border-radius: 16px;
+            padding: 24px 28px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* ─────────────────────── */
+        /* Section 7: Personality  */
+        /* ─────────────────────── */
+        .s-personality { /* background set by JS */ }
+        .personality-emoji { font-size: 4rem; margin-bottom: 16px; }
+        .personality-type {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 20px;
+        }
+        .personality-desc {
+            font-size: clamp(0.9rem, 2vw, 1.05rem);
+            max-width: 440px;
+            line-height: 1.75;
+            opacity: 0.85;
+        }
+
+        /* ─────────────────────── */
+        /* Section 8: Summary      */
+        /* ─────────────────────── */
+        .s-summary {
+            background: linear-gradient(160deg, #C97A8E 0%, #E8A0B4 60%, #F5C9D6 100%);
+            color: #fff;
+        }
+        .summary-card {
+            background: rgba(255,255,255,0.18);
+            border: 1.5px solid rgba(255,255,255,0.35);
+            border-radius: 24px;
+            padding: 32px 36px;
+            max-width: 400px;
+            width: 100%;
+            margin: 24px auto;
+            backdrop-filter: blur(10px);
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            font-size: 0.9rem;
+        }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-row-label { opacity: 0.8; font-weight: 600; }
+        .summary-row-value { font-weight: 800; font-size: 1rem; }
+
+        .btn-share {
+            background: #fff;
+            color: var(--pink-deep);
+            border: none;
+            border-radius: 100px;
+            padding: 14px 32px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 6px 20px rgba(74,48,64,0.15);
+        }
+        .btn-share:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(74,48,64,0.2); }
+
+        .summary-mochi { font-size: 2.5rem; margin-bottom: 8px; }
+        .summary-thanks {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.6rem, 4vw, 2.4rem);
+            font-style: italic;
+            margin-bottom: 6px;
+        }
+        .summary-sub { font-size: 0.85rem; opacity: 0.75; margin-bottom: 20px; }
+
+        /* ── Empty state ── */
+        .empty-wrapped {
+            display: none;
+            min-height: 100vh;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 100px 32px 60px;
+            background: linear-gradient(160deg, #FDF8FA, #FAE8EF);
+        }
+        .empty-wrapped.show { display: flex; }
+        .empty-wrapped h2 { font-family: 'Playfair Display', serif; font-size: 2rem; margin: 16px 0 10px; }
+        .empty-wrapped p { color: var(--text-muted); margin-bottom: 28px; }
+        .btn-go-shelf {
+            background: var(--pink-deep);
+            color: #fff;
+            text-decoration: none;
+            border-radius: 100px;
+            padding: 12px 28px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .btn-go-shelf:hover { background: #b8697d; transform: translateY(-1px); }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            header { padding: 14px 18px; }
+            nav a { padding: 6px 10px; font-size: 0.8rem; }
+            .wrapped-section { padding: 90px 20px 50px; }
+            .numbers-grid { gap: 28px; }
+            .top-books { gap: 14px; }
+            .top-book-card { width: 100px; }
+            .top-book-cover, .top-book-cover-fallback { width: 80px; height: 120px; }
+            .summary-card { padding: 24px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo-area">
+        <span class="logo-bunny">🐰</span>
+        <span class="logo-wordmark">Mochi</span>
+    </div>
+    <nav>
+        <a href="shelf.html">My Shelf</a>
+        <a href="discover.html">Discover</a>
+        <a href="pet.html">My Pet</a>
+        <a href="wrapped.html" class="active">Wrapped</a>
+    </nav>
+</header>
+
+<!-- Progress dots -->
+<div class="progress-dots" id="progressDots"></div>
+
+<!-- Empty state -->
+<div class="empty-wrapped" id="emptyState">
+    <div style="font-size:3.5rem;margin-bottom:8px">🐰</div>
+    <h2>Your Wrapped is empty!</h2>
+    <p>Mark some books as Read on your shelf<br>to unlock your reading story.</p>
+    <a href="shelf.html" class="btn-go-shelf">Go to my shelf →</a>
+</div>
+
+<!-- Section 1: Hero -->
+<section class="wrapped-section s-hero" id="s1">
+    <div class="hero-bunny fade-up">🐰</div>
+    <div class="hero-year fade-up delay-1" id="heroYear">2026</div>
+    <h1 class="hero-title fade-up delay-2" id="heroTitle">
+        Your<br><em>Reading Wrapped.</em>
+    </h1>
+    <p class="hero-sub fade-up delay-3">Your story, by the books. 🌸</p>
+    <div class="scroll-hint">
+        <span>scroll</span>
+        <span class="scroll-arrow">↓</span>
+    </div>
+</section>
+
+<!-- Section 2: Numbers -->
+<section class="wrapped-section s-numbers" id="s2">
+    <p class="section-label fade-up">This year</p>
+    <h2 class="section-big fade-up delay-1" style="color:#fff">You read</h2>
+    <div class="numbers-grid fade-up delay-2">
+        <div class="big-number">
+            <div class="big-number-val" id="numBooks">0</div>
+            <div class="big-number-label">books</div>
+        </div>
+        <div class="big-number" id="pagesBlock">
+            <div class="big-number-val" id="numPages">0</div>
+            <div class="big-number-label">pages</div>
+        </div>
+    </div>
+    <div class="book-dots fade-up delay-3" id="bookDots"></div>
+    <p class="fun-fact fade-up delay-4" id="funFact"></p>
+</section>
+
+<!-- Section 3: Rhythm -->
+<section class="wrapped-section s-rhythm" id="s3">
+    <p class="section-label fade-up">Your reading rhythm</p>
+    <h2 class="section-big fade-up delay-1">Month by month</h2>
+    <div class="month-chart fade-up delay-2" id="monthChart"></div>
+    <div class="fade-up delay-3" id="bestMonthCallout"></div>
+</section>
+
+<!-- Section 4: Author -->
+<section class="wrapped-section s-author" id="s4">
+    <p class="section-label fade-up">You couldn't get enough of</p>
+    <div class="author-name fade-up delay-1" id="authorName">—</div>
+    <p class="author-count fade-up delay-2" id="authorCount">—</p>
+    <div class="author-books fade-up delay-3" id="authorBooks"></div>
+</section>
+
+<!-- Section 5: Vibe -->
+<section class="wrapped-section s-vibe" id="s5">
+    <p class="section-label fade-up" id="vibeLabel" style="color:rgba(255,255,255,0.7)">Your reading vibe was</p>
+    <div class="vibe-word fade-up delay-1" id="vibeWord">—</div>
+    <div class="vibe-tags fade-up delay-2" id="vibeTags"></div>
+    <p class="section-lead fade-up delay-3" id="vibeDesc" style="opacity:0.8">—</p>
+</section>
+
+<!-- Section 6: Top Books -->
+<section class="wrapped-section s-top" id="s6">
+    <p class="section-label fade-up">Your highest rated</p>
+    <h2 class="section-big fade-up delay-1">5-star <em style="color:var(--pink-deep)">reads.</em></h2>
+    <div class="top-books fade-up delay-2" id="topBooks"></div>
+</section>
+
+<!-- Section 7: Personality -->
+<section class="wrapped-section s-personality" id="s7">
+    <div class="personality-emoji fade-up" id="personalityEmoji">📚</div>
+    <p class="section-label fade-up delay-1" style="opacity:0.65">This year, you were</p>
+    <div class="personality-type fade-up delay-2" id="personalityType">—</div>
+    <p class="personality-desc fade-up delay-3" id="personalityDesc">—</p>
+</section>
+
+<!-- Section 8: Summary -->
+<section class="wrapped-section s-summary" id="s8">
+    <div class="summary-mochi fade-up">🐰</div>
+    <h2 class="summary-thanks fade-up delay-1">What a year, bestie.</h2>
+    <p class="summary-sub fade-up delay-2">Here's everything you lived through in books.</p>
+
+    <div class="summary-card fade-up delay-3">
+        <div class="summary-row">
+            <span class="summary-row-label">📚 Books read</span>
+            <span class="summary-row-value" id="sumBooks">—</span>
+        </div>
+        <div class="summary-row" id="sumPagesRow">
+            <span class="summary-row-label">📄 Pages read</span>
+            <span class="summary-row-value" id="sumPages">—</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-row-label">✍️ Fave author</span>
+            <span class="summary-row-value" id="sumAuthor">—</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-row-label">🌙 Top vibe</span>
+            <span class="summary-row-value" id="sumVibe">—</span>
+        </div>
+        <div class="summary-row">
+            <span class="summary-row-label">✨ Reader type</span>
+            <span class="summary-row-value" id="sumType">—</span>
+        </div>
+    </div>
+
+    <button class="btn-share fade-up delay-4" id="shareBtn">Share my Wrapped 🌸</button>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="mochi.js"></script>
+<script>
+// ──────────────────────────────────────────
+// Data
+// ──────────────────────────────────────────
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTH_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const DOT_COLORS = [
+    '#E8A0B4','#C97A8E','#A8C5E8','#8BC5B8','#E8C5A0',
+    '#B8A8E8','#E8D0A0','#C5A8D4','#F0B8C8','#B8D4C5',
+];
+
+function getBooks() { return window.mochiGetBooks(); }
+
+// ──────────────────────────────────────────
+// Algorithm
+// ──────────────────────────────────────────
+function computeWrapped(books) {
+    const year = new Date().getFullYear();
+
+    const readThisYear = books.filter(b =>
+        b.status === 'read' &&
+        b.dateFinished &&
+        new Date(b.dateFinished).getFullYear() === year
+    );
+
+    if (readThisYear.length === 0) return null;
+
+    // Total books & pages
+    const totalBooks = readThisYear.length;
+    const totalPages = readThisYear.reduce((s, b) => s + (b.pageCount || 0), 0);
+
+    // Books by month
+    const byMonth = Array.from({length: 12}, () => []);
+    readThisYear.forEach(b => {
+        const m = new Date(b.dateFinished).getMonth();
+        byMonth[m].push(b);
+    });
+
+    // Best month
+    const bestMonthIdx = byMonth.reduce((best, arr, i) =>
+        arr.length > (byMonth[best]?.length || 0) ? i : best, 0);
+
+    // Favourite author
+    const authorCounts = {};
+    readThisYear.forEach(b => { authorCounts[b.author] = (authorCounts[b.author] || 0) + 1; });
+    const [favAuthor, favAuthorCount] = Object.entries(authorCounts).sort(([,a],[,b]) => b-a)[0] || ['Unknown', 1];
+    const authorBooks = readThisYear.filter(b => b.author === favAuthor);
+
+    // Favourite tag/vibe
+    const tagCounts = {};
+    readThisYear.forEach(b => b.tags.forEach(t => {
+        const k = t.toLowerCase().replace(/[^\w\s]/g,'').trim();
+        if (k) tagCounts[k] = (tagCounts[k] || 0) + 1;
+    }));
+    const sortedTags = Object.entries(tagCounts).sort(([,a],[,b]) => b-a);
+    const topTag = sortedTags[0] ? sortedTags[0][0] : null;
+    const topTagsDisplay = sortedTags.slice(0, 5).map(([tag]) => {
+        const orig = readThisYear.flatMap(b => b.tags).find(t =>
+            t.toLowerCase().replace(/[^\w\s]/g,'').trim() === tag
+        ) || tag;
+        return orig;
+    });
+
+    // Vibe definition
+    const vibe = getVibe(tagCounts, topTag);
+
+    // Top rated books (5★ first, then highest rated)
+    const fiveStars = readThisYear.filter(b => b.rating === 5);
+    const topRated = fiveStars.length > 0
+        ? fiveStars.slice(0, 3)
+        : [...readThisYear].sort((a,b) => (b.rating||0) - (a.rating||0)).slice(0, 3);
+    const hasAllFiveStars = fiveStars.length > 0;
+
+    // Personality
+    const personality = getPersonality(tagCounts, readThisYear);
+
+    // Fun fact
+    const funFact = getFunFact(totalBooks, totalPages);
+
+    return {
+        year, totalBooks, totalPages, byMonth, bestMonthIdx,
+        favAuthor, favAuthorCount, authorBooks,
+        topTag, topTagsDisplay, vibe,
+        topRated, hasAllFiveStars,
+        personality, funFact,
+        readThisYear,
+    };
+}
+
+function getVibe(tagCounts, topTag) {
+    const tags = Object.keys(tagCounts).join(' ');
+    const isDark = /dark|thriller|mystery|horror|suspense|crime|twist/.test(tags);
+    const isRomance = /romance|love|enemies|forbidden|arranged|slow.?burn|fake.?dating|marry|bodyguard|royalt/.test(tags);
+    const isEmotional = /emotional|raw|important|cry|mental|trauma/.test(tags);
+
+    if (isDark && isRomance) return {
+        word: 'Dark Romance',
+        desc: 'Morally grey love interests, tension you can taste, chaos wrapped in a love story. This is your world.',
+        bg: 'linear-gradient(135deg, #1A0A1E 0%, #4A1030 100%)',
+        color: '#fff',
+        tagColor: 'rgba(255,255,255,0.7)',
+    };
+    if (isRomance) return {
+        word: 'Hopeless Romantic',
+        desc: 'You believe in slow burns, stolen glances, and happily ever afters. We love this for you.',
+        bg: 'linear-gradient(135deg, #F5C9D6 0%, #E8A0B4 100%)',
+        color: '#4A1030',
+        tagColor: 'rgba(74,16,48,0.6)',
+    };
+    if (isDark) return {
+        word: 'Thriller Addict',
+        desc: 'Plot twists, dark secrets, unreliable narrators. You live for the moment your jaw drops.',
+        bg: 'linear-gradient(135deg, #1A1A2E 0%, #2C2C4E 100%)',
+        color: '#fff',
+        tagColor: 'rgba(255,255,255,0.6)',
+    };
+    if (isEmotional) return {
+        word: 'The Feeler',
+        desc: "You don't just read — you feel. Every character lives in you long after the last page.",
+        bg: 'linear-gradient(135deg, #4A7B9D 0%, #2C5F7A 100%)',
+        color: '#fff',
+        tagColor: 'rgba(255,255,255,0.6)',
+    };
+    return {
+        word: 'BookTok Certified',
+        desc: 'Eclectic, bold, always ahead of the trend. Your shelf tells a story all of its own.',
+        bg: 'linear-gradient(135deg, #C97A8E 0%, #E8A0B4 100%)',
+        color: '#fff',
+        tagColor: 'rgba(255,255,255,0.6)',
+    };
+}
+
+function getPersonality(tagCounts, books) {
+    const tags = Object.keys(tagCounts).join(' ');
+    const isDark = /dark|thriller|mystery|horror|suspense|twist/.test(tags);
+    const isRomance = /romance|love|enemies|forbidden|arranged|slow.?burn|fake.?dating|bodyguard/.test(tags);
+    const isEmotional = /emotional|raw|important/.test(tags);
+    const avg = books.reduce((s,b) => s + (b.rating||0), 0) / books.length;
+
+    if (isDark && isRomance && avg >= 4.5) return {
+        type: 'Dark Romance Queen',
+        emoji: '🖤',
+        desc: "Your standards are high, your book boyfriends are dangerous, and you wouldn't have it any other way.",
+        bg: 'linear-gradient(135deg, #1A0A1E 0%, #6B1A40 100%)',
+        color: '#fff',
+    };
+    if (isRomance && avg >= 4) return {
+        type: 'Hopeless Romantic',
+        emoji: '💕',
+        desc: "You cry at the good parts, reread your favourite chapters, and recommend these to everyone you know.",
+        bg: 'linear-gradient(135deg, #FAE8EF 0%, #F5C9D6 100%)',
+        color: '#4A1030',
+    };
+    if (isDark && avg >= 4) return {
+        type: 'Thriller Obsessive',
+        emoji: '🔪',
+        desc: "You stay up past midnight because you physically cannot stop. Sleep is for people who don't love plot twists.",
+        bg: 'linear-gradient(135deg, #1A1A2E 0%, #16213E 100%)',
+        color: '#fff',
+    };
+    if (isEmotional) return {
+        type: 'The Feeler',
+        emoji: '💔',
+        desc: "Books aren't just entertainment to you — they're experience. You carry your characters with you.",
+        bg: 'linear-gradient(135deg, #2C5F7A 0%, #4A7B9D 100%)',
+        color: '#fff',
+    };
+    return {
+        type: 'Certified BookTok Girl',
+        emoji: '📚',
+        desc: "Your shelf is a whole vibe. Varied, opinionated, passionate. TikTok recommended it, you devoured it.",
+        bg: 'linear-gradient(135deg, #C97A8E 0%, #E8A0B4 100%)',
+        color: '#fff',
+    };
+}
+
+function getFunFact(books, pages) {
+    if (pages === 0) {
+        if (books === 1) return '✦ Your first book of the year. The beginning of something beautiful.';
+        return `✦ ${books} books read. Every single one counts.`;
+    }
+    const hours = Math.round(pages / 50);
+    if (hours >= 40) return `✦ That's roughly ${hours} hours living inside someone else's story.`;
+    if (hours >= 10) return `✦ About ${hours} hours of pure reading bliss.`;
+    return `✦ ${pages} pages of worlds, characters, and feelings. Beautiful.`;
+}
+
+// ──────────────────────────────────────────
+// Rendering
+// ──────────────────────────────────────────
+async function render(data) {
+    const { year, totalBooks, totalPages, byMonth, bestMonthIdx,
+            favAuthor, favAuthorCount, authorBooks,
+            topTagsDisplay, vibe, topRated, hasAllFiveStars,
+            personality, funFact, readThisYear } = data;
+
+    // Section 1: Hero
+    document.getElementById('heroYear').textContent = year;
+
+    // Section 2: Numbers
+    animateCount('numBooks', totalBooks, 1200);
+    if (totalPages > 0) {
+        animateCount('numPages', totalPages, 1600);
+    } else {
+        document.getElementById('pagesBlock').style.display = 'none';
+    }
+    document.getElementById('funFact').textContent = funFact;
+
+    // Book dots
+    const dotsEl = document.getElementById('bookDots');
+    readThisYear.forEach((_, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'book-dot';
+        dot.style.cssText = `background:${DOT_COLORS[i % DOT_COLORS.length]};`;
+        dot.title = readThisYear[i].title;
+        dotsEl.appendChild(dot);
+    });
+
+    // Section 3: Month chart
+    const chartEl = document.getElementById('monthChart');
+    const currentMonth = new Date().getMonth();
+    const maxBooks = Math.max(...byMonth.map(m => m.length), 1);
+    for (let m = 0; m <= currentMonth; m++) {
+        const count = byMonth[m].length;
+        const pct = Math.max((count / maxBooks) * 100, count > 0 ? 8 : 4);
+        const wrap = document.createElement('div');
+        wrap.className = 'bar-wrap';
+        const bar = document.createElement('div');
+        bar.className = `bar${count > 0 ? ' has-books' : ''}${m === bestMonthIdx && count > 0 ? ' best' : ''}`;
+        bar.style.height = '4px';
+        bar.dataset.height = pct + '%';
+        if (count > 0) {
+            const cnt = document.createElement('span');
+            cnt.className = 'bar-count';
+            cnt.textContent = count;
+            bar.appendChild(cnt);
+        }
+        const label = document.createElement('span');
+        label.className = 'bar-label';
+        label.textContent = MONTH_NAMES[m];
+        wrap.appendChild(bar);
+        wrap.appendChild(label);
+        chartEl.appendChild(wrap);
+    }
+    const bestCount = byMonth[bestMonthIdx].length;
+    if (bestCount > 0) {
+        document.getElementById('bestMonthCallout').innerHTML =
+            `<div class="best-month-callout">Your best month: ${MONTH_FULL[bestMonthIdx]} with ${bestCount} book${bestCount > 1 ? 's' : ''} ✨</div>`;
+    }
+
+    // Section 4: Author
+    document.getElementById('authorName').textContent = favAuthor;
+    document.getElementById('authorCount').textContent =
+        `You read ${favAuthorCount} of their book${favAuthorCount > 1 ? 's' : ''} this year`;
+    const authorBooksEl = document.getElementById('authorBooks');
+    authorBooks.forEach((book, i) => {
+        const spine = document.createElement('div');
+        spine.className = 'author-book-spine';
+        const h = 50 + Math.floor(Math.random() * 20);
+        spine.style.cssText = `height:${h}px;background:${DOT_COLORS[i % DOT_COLORS.length]};`;
+        spine.title = book.title;
+        authorBooksEl.appendChild(spine);
+    });
+
+    // Section 5: Vibe
+    document.getElementById('s5').style.background = vibe.bg;
+    document.getElementById('s5').style.color = vibe.color;
+    document.getElementById('vibeWord').textContent = vibe.word;
+    document.getElementById('vibeDesc').textContent = vibe.desc;
+    const vibeTagsEl = document.getElementById('vibeTags');
+    vibeTagsEl.style.color = vibe.tagColor;
+    topTagsDisplay.forEach(tag => {
+        const pill = document.createElement('span');
+        pill.className = 'vibe-tag';
+        pill.textContent = tag;
+        vibeTagsEl.appendChild(pill);
+    });
+
+    // Section 6: Top books
+    const topBooksEl = document.getElementById('topBooks');
+    if (topRated.length === 0) {
+        topBooksEl.innerHTML = `<div class="no-five-star">Rate your books on your shelf to see your top picks here 🌸</div>`;
+    } else {
+        const ranks = ['#1', '#2', '#3'];
+        topRated.forEach((book, i) => {
+            const card = document.createElement('div');
+            card.className = 'top-book-card';
+            const stars = '⭐'.repeat(book.rating || 0);
+            card.innerHTML = `
+                <div class="top-book-rank">${ranks[i] || ''}</div>
+                <div class="top-book-cover-fallback" style="background:${book.fallbackColor}" id="topCover_${i}">
+                    <span style="font-family:'Playfair Display',serif;font-size:0.72rem;color:#fff;line-height:1.3;text-align:center;">${book.title}</span>
+                </div>
+                <div class="top-book-title">${book.title}</div>
+                <div class="top-book-stars">${stars}</div>
+            `;
+            topBooksEl.appendChild(card);
+            // Async load cover
+            loadTopCover(book, i);
+        });
+    }
+    if (!hasAllFiveStars && topRated.length > 0) {
+        const note = document.createElement('p');
+        note.style.cssText = 'font-size:0.78rem;color:var(--text-muted);margin-top:16px;width:100%';
+        note.textContent = 'Showing your highest rated reads this year ✨';
+        topBooksEl.appendChild(note);
+    }
+
+    // Section 7: Personality
+    document.getElementById('s7').style.background = personality.bg;
+    document.getElementById('s7').style.color = personality.color;
+    document.getElementById('personalityEmoji').textContent = personality.emoji;
+    document.getElementById('personalityType').textContent = personality.type;
+    document.getElementById('personalityDesc').textContent = personality.desc;
+
+    // Section 8: Summary
+    document.getElementById('sumBooks').textContent = totalBooks;
+    document.getElementById('sumPages').textContent = totalPages > 0 ? totalPages.toLocaleString() : '—';
+    if (totalPages === 0) document.getElementById('sumPagesRow').style.display = 'none';
+    document.getElementById('sumAuthor').textContent = favAuthor.split(' ').slice(-1)[0]; // last name only
+    document.getElementById('sumVibe').textContent = vibe.word;
+    document.getElementById('sumType').textContent = personality.type;
+
+    // Share button
+    document.getElementById('shareBtn').addEventListener('click', async () => {
+        const text = `I read ${totalBooks} books${totalPages > 0 ? ` and ${totalPages.toLocaleString()} pages` : ''} this year on Mochi! 🐰📚 My reader type: ${personality.type}. #MochiReads #BookTok`;
+        if (navigator.share) {
+            try { await navigator.share({ title: `My ${year} Reading Wrapped`, text }); return; } catch (_) {}
+        }
+        try {
+            await navigator.clipboard.writeText(text);
+            const btn = document.getElementById('shareBtn');
+            btn.textContent = 'Copied! ✓';
+            setTimeout(() => { btn.textContent = 'Share my Wrapped 🌸'; }, 2000);
+        } catch (_) {}
+    });
+}
+
+async function loadTopCover(book, idx) {
+    const placeholder = document.getElementById(`topCover_${idx}`);
+    if (!placeholder) return;
+    try {
+        let url = null;
+        if (book.coverId) {
+            url = `https://covers.openlibrary.org/b/id/${book.coverId}-L.jpg`;
+        } else {
+            const q = encodeURIComponent(`${book.title} ${book.author}`);
+            const res = await fetch(`https://openlibrary.org/search.json?q=${q}&limit=1&fields=cover_i`);
+            const data = await res.json();
+            if (data.docs?.[0]?.cover_i) url = `https://covers.openlibrary.org/b/id/${data.docs[0].cover_i}-L.jpg`;
+        }
+        if (url) {
+            const img = document.createElement('img');
+            img.className = 'top-book-cover';
+            img.src = url;
+            img.alt = book.title;
+            img.onerror = () => {};
+            placeholder.replaceWith(img);
+        }
+    } catch (_) {}
+}
+
+// ──────────────────────────────────────────
+// Count animation
+// ──────────────────────────────────────────
+function animateCount(elId, target, duration) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    let start = null;
+    const step = (ts) => {
+        if (!start) start = ts;
+        const progress = Math.min((ts - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.floor(ease * target).toLocaleString();
+        if (progress < 1) requestAnimationFrame(step);
+        else el.textContent = target.toLocaleString();
+    };
+    requestAnimationFrame(step);
+}
+
+// ──────────────────────────────────────────
+// Scroll animations + progress dots
+// ──────────────────────────────────────────
+function setupScrollObserver(sectionIds) {
+    const dots = document.getElementById('progressDots');
+    const dotEls = sectionIds.map((id, i) => {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dot.addEventListener('click', () => document.getElementById(id).scrollIntoView({ behavior: 'smooth' }));
+        dots.appendChild(dot);
+        return dot;
+    });
+
+    const chartAnimated = new Set();
+
+    const obs = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            // Fade-up elements
+            if (entry.isIntersecting) {
+                entry.target.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));
+
+                // Animate bar chart when s3 becomes visible
+                if (entry.target.id === 's3' && !chartAnimated.has('s3')) {
+                    chartAnimated.add('s3');
+                    setTimeout(() => {
+                        document.querySelectorAll('.bar').forEach(bar => {
+                            bar.style.height = bar.dataset.height || '4px';
+                        });
+                    }, 300);
+                }
+            }
+
+            // Update dot
+            const idx = sectionIds.indexOf(entry.target.id);
+            if (idx !== -1) {
+                dotEls[idx].classList.toggle('active', entry.isIntersecting);
+            }
+        });
+    }, { threshold: 0.4 });
+
+    sectionIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) obs.observe(el);
+    });
+}
+
+// ──────────────────────────────────────────
+// Init
+// ──────────────────────────────────────────
+function init() {
+    const user = window.mochiGetUser();
+    const nickname = user?.user_metadata?.nickname || (user?.email ? user.email.split('@')[0] : null);
+    if (nickname) {
+        document.getElementById('heroTitle').innerHTML = `${nickname}'s<br><em>Reading Wrapped.</em>`;
+    }
+
+    const books = getBooks();
+    const data = computeWrapped(books);
+
+    if (!data) {
+        document.getElementById('emptyState').classList.add('show');
+        document.getElementById('progressDots').style.display = 'none';
+        document.querySelectorAll('.wrapped-section').forEach(s => s.style.display = 'none');
+        return;
+    }
+
+    render(data);
+    setupScrollObserver(['s1','s2','s3','s4','s5','s6','s7','s8']);
+}
+
+window.initMochi(() => init());
+</script>
+
+</body>
+</html>

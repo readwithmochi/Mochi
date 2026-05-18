@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mochi — Book Details</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Nunito:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --pink-soft: #FAE8EF;
+            --pink-light: #F5C9D6;
+            --pink: #E8A0B4;
+            --pink-deep: #C97A8E;
+            --text: #4A3040;
+            --text-muted: #9B7B8A;
+            --border: #F0DDE5;
+            --surface: #FFFFFF;
+        }
+
+        body { background: #FDF8FA; color: var(--text); font-family: 'Nunito', sans-serif; min-height: 100vh; }
+
+        header {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(14px);
+            border-bottom: 1.5px solid var(--border);
+            padding: 15px 40px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .logo-area { display: flex; align-items: center; gap: 8px; }
+        .logo-bunny { font-size: 1.4rem; }
+        .logo-wordmark { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--pink-deep); font-weight: 700; }
+        nav { display: flex; gap: 4px; }
+        nav a { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); text-decoration: none; padding: 7px 14px; border-radius: 10px; transition: all 0.2s; }
+        nav a:hover, nav a.active { background: var(--pink-soft); color: var(--pink-deep); }
+
+        .detail-page {
+            max-width: 540px;
+            margin: 0 auto;
+            padding: 48px 24px 100px;
+        }
+
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.82rem; font-weight: 700; color: var(--text-muted);
+            text-decoration: none; margin-bottom: 28px;
+            padding: 7px 14px; border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .back-link:hover { background: var(--pink-soft); color: var(--pink-deep); }
+
+        /* ── Book header ── */
+        .book-header {
+            display: flex; gap: 20px; align-items: flex-start;
+            margin-bottom: 28px;
+        }
+        .cover-thumb {
+            width: 72px; height: 108px; border-radius: 10px;
+            overflow: hidden; flex-shrink: 0;
+            box-shadow: 0 8px 24px rgba(74,48,64,0.15);
+        }
+        .cover-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .cover-thumb-fallback {
+            width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            padding: 6px; text-align: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 0.6rem; font-weight: 700; color: #fff; line-height: 1.3;
+        }
+        .book-title-area { padding-top: 4px; }
+        .book-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.35rem; font-weight: 700; line-height: 1.25;
+            color: var(--text); margin-bottom: 5px;
+        }
+        .book-author { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+
+        /* ── Card ── */
+        .detail-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 24px;
+            padding: 28px;
+            display: flex; flex-direction: column; gap: 22px;
+        }
+
+        .field-group { display: flex; flex-direction: column; gap: 8px; }
+        .field-label {
+            font-size: 0.7rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.9px;
+            color: var(--text-muted);
+        }
+
+        /* dates side by side */
+        .dates-row { display: flex; gap: 14px; }
+        .dates-row .field-group { flex: 1; }
+
+        .date-input, .notes-input {
+            width: 100%;
+            background: var(--pink-soft); border: 1.5px solid var(--border);
+            border-radius: 12px; padding: 11px 14px;
+            font-family: 'Nunito', sans-serif; font-size: 0.88rem;
+            color: var(--text); outline: none; transition: border-color 0.2s;
+        }
+        .date-input:focus, .notes-input:focus { border-color: var(--pink); background: #fff; }
+
+        .notes-input { resize: vertical; min-height: 120px; line-height: 1.6; }
+
+        /* ── Stars ── */
+        .star-row { display: flex; gap: 4px; }
+        .star {
+            font-size: 1.7rem; cursor: pointer; color: #ddd;
+            transition: color 0.15s; line-height: 1;
+        }
+        .star.lit { color: #F4A942; }
+        .star:hover { color: #F4A942; }
+
+        /* ── Divider ── */
+        .divider { height: 1.5px; background: var(--border); border-radius: 2px; }
+
+        /* ── Actions ── */
+        .actions {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: 20px;
+        }
+        .btn-save {
+            background: var(--pink-deep); color: #fff;
+            border: none; border-radius: 14px; padding: 13px 28px;
+            font-family: 'Nunito', sans-serif; font-size: 0.9rem; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-save:hover { background: #b8697d; }
+        .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        .save-ok { font-size: 0.82rem; font-weight: 700; color: #2A8050; display: none; }
+        .save-ok.show { display: block; }
+
+        .btn-remove {
+            background: none; border: none; cursor: pointer;
+            font-size: 0.8rem; font-weight: 700; color: #C05050;
+            text-decoration: underline; font-family: 'Nunito', sans-serif;
+        }
+        .btn-remove:hover { color: #a03030; }
+
+        .page-msg { text-align: center; padding: 80px 24px; color: var(--text-muted); font-size: 1rem; }
+
+        @media (max-width: 580px) {
+            header { padding: 14px 18px; }
+            nav a { padding: 6px 10px; font-size: 0.8rem; }
+            .detail-page { padding: 32px 16px 80px; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo-area">
+        <span class="logo-bunny">🐰</span>
+        <span class="logo-wordmark">Mochi</span>
+    </div>
+    <nav>
+        <a href="shelf.html" class="active">My Shelf</a>
+        <a href="discover.html">Discover</a>
+        <a href="pet.html">My Pet</a>
+        <a href="wrapped.html">Wrapped</a>
+    </nav>
+</header>
+
+<div class="detail-page">
+    <div class="page-msg" id="pageMsg">Loading... 🌸</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="mochi.js"></script>
+<script>
+let book = null;
+let currentRating = 0;
+
+function tsToDate(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function dateToTs(val) {
+    if (!val) return null;
+    return new Date(val).getTime();
+}
+
+function todayValue() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function renderPage() {
+    currentRating = book.rating || 0;
+    const today = todayValue();
+
+    const coverHTML = book.coverId
+        ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-L.jpg" alt="${book.title}" onerror="this.style.display='none'">`
+        : `<div class="cover-thumb-fallback" style="background:${book.fallbackColor||'#C97A8E'}">${book.title}</div>`;
+
+    const starsHTML = Array.from({length:5}, (_,i) =>
+        `<span class="star${i < currentRating ? ' lit':''}" data-star="${i+1}">★</span>`
+    ).join('');
+
+    const page = document.querySelector('.detail-page');
+    page.innerHTML = `
+        <a href="shelf.html" class="back-link">← Back to shelf</a>
+
+        <div class="book-header">
+            <div class="cover-thumb">${coverHTML}</div>
+            <div class="book-title-area">
+                <div class="book-title">${book.title}</div>
+                <div class="book-author">by ${book.author}</div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div id="dateStartedWrap" style="${book.status === 'want' ? 'display:none' : ''}">
+                <div class="field-group">
+                    <div class="field-label">Date started</div>
+                    <input class="date-input" type="date" id="dateStarted" value="${tsToDate(book.dateStarted)}" max="${today}">
+                </div>
+                <div class="divider"></div>
+            </div>
+
+            <div id="dateFinishedWrap" style="${book.status !== 'read' ? 'display:none' : ''}">
+                <div class="field-group">
+                    <div class="field-label">Date finished</div>
+                    <input class="date-input" type="date" id="dateFinished" value="${tsToDate(book.dateFinished)}" max="${today}">
+                </div>
+                <div class="divider"></div>
+            </div>
+
+            <div id="ratingWrap" style="${book.status !== 'read' ? 'display:none' : ''}">
+                <div class="field-group">
+                    <div class="field-label">My rating</div>
+                    <div class="star-row" id="starRow">${starsHTML}</div>
+                </div>
+                <div class="divider"></div>
+            </div>
+
+            <div class="field-group">
+                <div class="field-label">Notes &amp; review</div>
+                <textarea class="notes-input" id="notesInput" placeholder="What did you think?">${book.notes||''}</textarea>
+            </div>
+        </div>
+
+        <div class="actions">
+            <div style="display:flex;align-items:center;gap:14px">
+                <button class="btn-save" id="saveBtn">Save</button>
+                <span class="save-ok" id="saveOk">✓ Saved!</span>
+            </div>
+            <button class="btn-remove" id="removeBtn">Remove from shelf</button>
+        </div>
+    `;
+
+    document.querySelectorAll('#starRow .star').forEach(star => {
+        star.addEventListener('click', () => {
+            currentRating = parseInt(star.dataset.star);
+            document.querySelectorAll('#starRow .star').forEach((s,i) => s.classList.toggle('lit', i < currentRating));
+        });
+    });
+
+    document.getElementById('saveBtn').addEventListener('click', saveBook);
+
+    document.getElementById('removeBtn').addEventListener('click', async () => {
+        if (!confirm(`Remove "${book.title}" from your shelf?`)) return;
+        const books = window.mochiGetBooks();
+        const idx = books.findIndex(b => b.id === book.id);
+        if (idx !== -1) books.splice(idx, 1);
+        await window.mochiDeleteBook(book.id);
+        window.location.href = 'shelf.html';
+    });
+}
+
+async function saveBook() {
+    const btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const dateFinishedVal = dateToTs(document.getElementById('dateFinished').value);
+
+    const updated = {
+        ...book,
+        rating: currentRating || null,
+        notes: document.getElementById('notesInput').value.trim(),
+        dateStarted: dateToTs(document.getElementById('dateStarted').value),
+        dateFinished: dateFinishedVal,
+        status: dateFinishedVal && !book.dateFinished ? 'read' : book.status,
+    };
+
+    const books = window.mochiGetBooks();
+    const idx = books.findIndex(b => b.id === book.id);
+    if (idx !== -1) books[idx] = updated;
+    book = updated;
+
+    await window.mochiUpdateBook(updated);
+
+    btn.disabled = false;
+    btn.textContent = 'Save';
+    const ok = document.getElementById('saveOk');
+    ok.classList.add('show');
+    setTimeout(() => ok.classList.remove('show'), 2500);
+}
+
+window.initMochi(async () => {
+    const id = new URLSearchParams(window.location.search).get('id');
+    if (!id) { window.location.href = 'shelf.html'; return; }
+
+    // Try sessionStorage first — set by shelf.html on card click
+    try {
+        const stored = sessionStorage.getItem('mochiCurrentBook');
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            if (parsed.id === id) {
+                book = parsed;
+                renderPage();
+                return;
+            }
+        }
+    } catch (_) {}
+
+    // Fallback: look in loaded books or query directly
+    try {
+        book = await window.mochiGetBookById(id);
+        renderPage();
+    } catch (e) {
+        document.getElementById('pageMsg').textContent = 'Could not load this book. Try going back to your shelf.';
+    }
+});
+</script>
+
+</body>
+</html>
