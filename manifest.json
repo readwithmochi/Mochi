@@ -1,0 +1,17 @@
+{
+  "name": "Mochi",
+  "short_name": "Mochi",
+  "description": "Your cozy reading companion",
+  "start_url": "/Mochi/",
+  "display": "standalone",
+  "background_color": "#FFF8F5",
+  "theme_color": "#E8A0B4",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
