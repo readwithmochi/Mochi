@@ -43,6 +43,7 @@
             date_started: book.dateStarted !== undefined ? book.dateStarted : null,
             quotes: book.quotes || '',
             mood_tag: book.moodTag || '',
+            current_page: book.currentPage !== undefined ? book.currentPage : null,
         };
     }
 
@@ -64,6 +65,7 @@
             dateStarted: row.date_started,
             quotes: row.quotes || '',
             moodTag: row.mood_tag || '',
+            currentPage: row.current_page || null,
         };
     }
 

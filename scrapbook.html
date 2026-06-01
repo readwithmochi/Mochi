@@ -99,14 +99,21 @@
         .dates-row { display: flex; gap: 14px; }
         .dates-row .field-group { flex: 1; }
 
-        .date-input, .notes-input {
+        .date-input, .notes-input, .page-input {
             width: 100%;
             background: var(--pink-soft); border: 1.5px solid var(--border);
             border-radius: 12px; padding: 11px 14px;
             font-family: 'Nunito', sans-serif; font-size: 0.88rem;
             color: var(--text); outline: none; transition: border-color 0.2s;
         }
-        .date-input:focus, .notes-input:focus { border-color: var(--pink); background: #fff; }
+        .date-input:focus, .notes-input:focus, .page-input:focus { border-color: var(--pink); background: #fff; }
+        .page-input { -moz-appearance: textfield; }
+        .page-input::-webkit-outer-spin-button,
+        .page-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .page-progress {
+            font-size: 0.75rem; color: var(--text-muted); font-weight: 600;
+            margin-top: 6px;
+        }
 
         .notes-input { resize: vertical; min-height: 120px; line-height: 1.6; }
 
@@ -229,6 +236,19 @@ function renderPage() {
                 <div class="divider"></div>
             </div>
 
+            <div id="currentPageWrap" style="${book.status !== 'reading' ? 'display:none' : ''}">
+                <div class="field-group">
+                    <div class="field-label">Page I'm on</div>
+                    <input class="page-input" type="number" id="currentPage"
+                           value="${book.currentPage || ''}"
+                           min="1"
+                           ${book.pageCount ? `max="${book.pageCount}"` : ''}
+                           placeholder="e.g. 142">
+                    ${book.pageCount ? `<div class="page-progress" id="pageProgress">${book.currentPage ? `${Math.round((book.currentPage / book.pageCount) * 100)}% through` : `of ${book.pageCount} pages`}</div>` : ''}
+                </div>
+                <div class="divider"></div>
+            </div>
+
             <div id="dateFinishedWrap" style="${book.status !== 'read' ? 'display:none' : ''}">
                 <div class="field-group">
                     <div class="field-label">Date finished</div>
@@ -267,6 +287,19 @@ function renderPage() {
         });
     });
 
+    const pageInput = document.getElementById('currentPage');
+    const pageProgress = document.getElementById('pageProgress');
+    if (pageInput && pageProgress && book.pageCount) {
+        pageInput.addEventListener('input', () => {
+            const v = parseInt(pageInput.value);
+            if (!isNaN(v) && v > 0) {
+                pageProgress.textContent = `${Math.round((v / book.pageCount) * 100)}% through`;
+            } else {
+                pageProgress.textContent = `of ${book.pageCount} pages`;
+            }
+        });
+    }
+
     document.getElementById('saveBtn').addEventListener('click', saveBook);
 
     document.getElementById('removeBtn').addEventListener('click', async () => {
@@ -286,6 +319,9 @@ async function saveBook() {
 
     const dateFinishedVal = dateToTs(document.getElementById('dateFinished').value);
 
+    const pageEl = document.getElementById('currentPage');
+    const parsedPage = pageEl ? parseInt(pageEl.value) : NaN;
+
     const updated = {
         ...book,
         rating: currentRating || null,
@@ -293,6 +329,7 @@ async function saveBook() {
         dateStarted: dateToTs(document.getElementById('dateStarted').value),
         dateFinished: dateFinishedVal,
         status: dateFinishedVal && !book.dateFinished ? 'read' : book.status,
+        currentPage: !isNaN(parsedPage) && parsedPage > 0 ? parsedPage : null,
     };
 
     const books = window.mochiGetBooks();

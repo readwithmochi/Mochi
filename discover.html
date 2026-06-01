@@ -171,6 +171,38 @@
         .grid-message .msg-emoji { font-size: 2.5rem; display: block; margin-bottom: 12px; }
         .grid-message p { font-size: 0.87rem; }
 
+        /* ── Search bar ── */
+        .search-wrap {
+            max-width: 1100px; margin: 0 auto;
+            padding: 0 40px 24px;
+        }
+        .search-bar-inner {
+            position: relative; display: flex; align-items: center;
+        }
+        .search-input {
+            width: 100%; background: var(--surface);
+            border: 1.5px solid var(--border); border-radius: 100px;
+            padding: 13px 46px 13px 48px;
+            font-family: 'Nunito', sans-serif; font-size: 0.9rem;
+            color: var(--text); outline: none; transition: border-color 0.2s;
+            box-shadow: 0 2px 8px rgba(232,160,180,0.08);
+        }
+        .search-input:focus { border-color: var(--pink); background: #fff; }
+        .search-input::placeholder { color: var(--text-muted); }
+        .search-icon {
+            position: absolute; left: 18px;
+            font-size: 1rem; pointer-events: none; opacity: 0.6;
+        }
+        .search-clear {
+            position: absolute; right: 14px;
+            background: var(--pink-soft); border: none; border-radius: 50%;
+            width: 28px; height: 28px; font-size: 0.75rem; cursor: pointer;
+            display: none; align-items: center; justify-content: center;
+            color: var(--text-muted); transition: all 0.2s;
+        }
+        .search-clear.visible { display: flex; }
+        .search-clear:hover { background: var(--pink-light); color: var(--pink-deep); }
+
         /* ── Pet corner ── */
         .pet-corner {
             position: fixed; bottom: 28px; right: 28px; z-index: 50;
@@ -285,6 +317,7 @@
             header { padding: 14px 18px; }
             nav a { padding: 6px 10px; font-size: 0.8rem; }
             .page-hero { padding: 32px 20px 20px; }
+            .search-wrap { padding: 0 20px 20px; }
             .categories { padding: 0 20px 24px; }
             .discover-grid { padding: 0 20px 80px; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 18px; }
             .pet-corner { bottom: 14px; right: 14px; }
@@ -310,6 +343,14 @@
 <div class="page-hero">
     <h1>Find your <em>next obsession.</em></h1>
     <p>Picked just for you. Scroll forever. 🌸</p>
+</div>
+
+<div class="search-wrap">
+    <div class="search-bar-inner">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" id="searchInput" type="text" placeholder="Search any book, author, or series...">
+        <button class="search-clear" id="searchClear">✕</button>
+    </div>
 </div>
 
 <div class="categories" id="categories"></div>
@@ -939,6 +980,8 @@ let currentPage = 1;
 let isLoading = false;
 let hasMore = true;
 let totalCardsRendered = 0;
+let searchQuery = '';
+let searchDebounce = null;
 
 async function loadPage(key, page, replace = false) {
     if (isLoading) return;
@@ -952,14 +995,18 @@ async function loadPage(key, page, replace = false) {
 
     try {
         let books = [];
-        if (cat.type === 'foryou')   books = await fetchForYou(page);
+        if (key === '__search__')        books = await fetchSearch(searchQuery, page);
+        else if (cat.type === 'foryou')  books = await fetchForYou(page);
         else if (cat.type === 'curated') books = await fetchCurated(cat, page);
         else books = await fetchSearch(cat.query, page);
 
         if (replace) grid.innerHTML = '';
 
         if (!books.length && page === 1) {
-            grid.innerHTML = `<div class="grid-message"><span class="msg-emoji">😢</span><p>Couldn't load books right now. Try another category!</p></div>`;
+            const emptyMsg = key === '__search__'
+                ? `<div class="grid-message"><span class="msg-emoji">🔍</span><p>No books found for "${searchQuery}". Try a different title or author!</p></div>`
+                : `<div class="grid-message"><span class="msg-emoji">😢</span><p>Couldn't load books right now. Try another category!</p></div>`;
+            grid.innerHTML = emptyMsg;
             hasMore = false;
         } else {
             hasMore = books.length >= 10;
@@ -1015,6 +1062,35 @@ function init() {
 
     setupInfiniteScroll();
     switchCategory(activeKey);
+
+    const searchInput = document.getElementById('searchInput');
+    const searchClear = document.getElementById('searchClear');
+
+    searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim();
+        searchClear.classList.toggle('visible', q.length > 0);
+        clearTimeout(searchDebounce);
+        if (!q) {
+            switchCategory(activeKey === '__search__' ? 'foryou' : activeKey);
+            return;
+        }
+        searchDebounce = setTimeout(() => {
+            searchQuery = q;
+            document.getElementById('petMsg').textContent = `Searching for "${q}" 🔍`;
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            activeKey = '__search__';
+            currentPage = 1;
+            hasMore = true;
+            loadPage('__search__', 1, true);
+        }, 380);
+    });
+
+    searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        searchClear.classList.remove('visible');
+        searchQuery = '';
+        switchCategory('foryou');
+    });
 }
 
 // ──────────────────────────────────────────
