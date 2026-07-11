@@ -639,7 +639,6 @@ const CATEGORIES = [
     { key: 'thriller',     label: '🔪 Thriller',         type: 'curated', books: THRILLER_BOOKS,     fallbackQuery: 'psychological thriller suspense' },
     { key: 'fantasy',      label: '✨ Fantasy',           type: 'curated', books: FANTASY_BOOKS,      fallbackQuery: 'epic fantasy magic bestseller' },
     { key: 'contemporary', label: '🌸 Contemporary',     type: 'curated', books: CONTEMPORARY_BOOKS, fallbackQuery: 'contemporary literary fiction' },
-    { key: 'ya',           label: '🎒 YA',               type: 'curated', books: YA_BOOKS,           fallbackQuery: 'young adult bestseller coming of age' },
     { key: 'mystery',      label: '🕵️ Mystery',          type: 'curated', books: MYSTERY_BOOKS,      fallbackQuery: 'cozy mystery whodunit bestseller' },
     { key: 'scifi',        label: '🚀 Sci-Fi',           type: 'curated', books: SCIFI_BOOKS,        fallbackQuery: 'science fiction bestseller award' },
 ];
@@ -844,15 +843,23 @@ async function fetchForYou(page = 1) {
     const queries = buildForYouQueries();
     const shelfTitles = new Set(window.mochiGetBooks().map(b => b.title.toLowerCase().trim()));
 
-    const query = queries[(page - 1) % queries.length];
-    let results = await fetchSearch(query, Math.ceil(page / queries.length));
+    // Pull this page's slice from every personalized query and merge them,
+    // so one query overlapping heavily with the shelf can't starve the whole tab.
+    const batches = await Promise.all(queries.map(q => fetchSearch(q, page).catch(() => [])));
+    let results = batches.flat();
 
-    // If personalized query returned nothing, fall back to generic
+    // If personalized queries returned nothing, fall back to generic
     if (!results.length && page === 1) {
         results = await fetchSearch('romance fiction bestseller', 1);
     }
 
-    return results.filter(b => !shelfTitles.has(b.title.toLowerCase().trim()));
+    const seen = new Set();
+    return results.filter(b => {
+        const key = b.title.toLowerCase().trim();
+        if (shelfTitles.has(key) || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
 }
 
 // Lazy-fetch description from Works API for a single book
