@@ -99,6 +99,26 @@
         .dates-row { display: flex; gap: 14px; }
         .dates-row .field-group { flex: 1; }
 
+        /* ── Status selector ── */
+        .status-options { display: flex; gap: 8px; }
+        .status-option {
+            flex: 1;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 6px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            line-height: 1.4;
+        }
+        .status-option:hover { border-color: var(--pink); color: var(--pink-deep); }
+        .status-option.selected { background: var(--pink-soft); border-color: var(--pink); color: var(--pink-deep); }
+
         .date-input, .notes-input, .page-input {
             width: 100%;
             background: var(--pink-soft); border: 1.5px solid var(--border);
@@ -186,6 +206,7 @@
 <script>
 let book = null;
 let currentRating = 0;
+let currentStatus = null;
 
 function tsToDate(ts) {
     if (!ts) return '';
@@ -205,6 +226,7 @@ function todayValue() {
 
 function renderPage() {
     currentRating = book.rating || 0;
+    currentStatus = book.status;
     const today = todayValue();
 
     const coverHTML = book.coverId
@@ -228,6 +250,16 @@ function renderPage() {
         </div>
 
         <div class="detail-card">
+            <div class="field-group">
+                <div class="field-label">Status</div>
+                <div class="status-options" id="statusOptions">
+                    <button class="status-option${book.status === 'want' ? ' selected' : ''}" data-status="want">🌙<br>Want to read</button>
+                    <button class="status-option${book.status === 'reading' ? ' selected' : ''}" data-status="reading">📖<br>Reading</button>
+                    <button class="status-option${book.status === 'read' ? ' selected' : ''}" data-status="read">✓<br>Read it</button>
+                </div>
+            </div>
+            <div class="divider"></div>
+
             <div id="dateStartedWrap" style="${book.status === 'want' ? 'display:none' : ''}">
                 <div class="field-group">
                     <div class="field-label">Date started</div>
@@ -289,6 +321,15 @@ function renderPage() {
     page.querySelector('.book-author').textContent = 'by ' + book.author;
     page.querySelector('#notesInput').value = book.notes || '';
 
+    document.querySelectorAll('#statusOptions .status-option').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#statusOptions .status-option').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            currentStatus = btn.dataset.status;
+            syncStatusFields(currentStatus);
+        });
+    });
+
     document.querySelectorAll('#starRow .star').forEach(star => {
         star.addEventListener('click', () => {
             currentRating = parseInt(star.dataset.star);
@@ -321,11 +362,19 @@ function renderPage() {
     });
 }
 
+function syncStatusFields(status) {
+    document.getElementById('dateStartedWrap').style.display = status === 'want' ? 'none' : '';
+    document.getElementById('currentPageWrap').style.display = status === 'reading' ? '' : 'none';
+    document.getElementById('dateFinishedWrap').style.display = status === 'read' ? '' : 'none';
+    document.getElementById('ratingWrap').style.display = status === 'read' ? '' : 'none';
+}
+
 async function saveBook() {
     const btn = document.getElementById('saveBtn');
     btn.disabled = true;
     btn.textContent = 'Saving...';
 
+    const dateStartedVal = dateToTs(document.getElementById('dateStarted').value);
     const dateFinishedVal = dateToTs(document.getElementById('dateFinished').value);
 
     const pageEl = document.getElementById('currentPage');
@@ -333,12 +382,12 @@ async function saveBook() {
 
     const updated = {
         ...book,
-        rating: currentRating || null,
+        status: currentStatus,
+        rating: currentStatus === 'read' ? (currentRating || null) : null,
         notes: document.getElementById('notesInput').value.trim(),
-        dateStarted: dateToTs(document.getElementById('dateStarted').value),
-        dateFinished: dateFinishedVal,
-        status: dateFinishedVal && !book.dateFinished ? 'read' : book.status,
-        currentPage: !isNaN(parsedPage) && parsedPage > 0 ? parsedPage : null,
+        dateStarted: currentStatus === 'want' ? null : dateStartedVal,
+        dateFinished: currentStatus === 'read' ? (dateFinishedVal || book.dateFinished || Date.now()) : null,
+        currentPage: currentStatus === 'reading' && !isNaN(parsedPage) && parsedPage > 0 ? parsedPage : null,
     };
 
     const books = window.mochiGetBooks();
