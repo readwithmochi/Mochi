@@ -698,36 +698,67 @@ function addToShelf(title, author, coverId, status) {
 // ──────────────────────────────────────────
 // Personalization algorithm
 // ──────────────────────────────────────────
+const GENRE_AFFINITY_MAPS = [
+    { key: 'romance',      books: ROMANCE_BOOKS,      query: 'romance novel bestseller' },
+    { key: 'dark_romance', books: DARK_ROMANCE_BOOKS,  query: 'dark romance possessive love story' },
+    { key: 'fantasy',      books: FANTASY_BOOKS,       query: 'epic fantasy magic bestseller' },
+    { key: 'thriller',     books: THRILLER_BOOKS,      query: 'psychological thriller suspense' },
+    { key: 'contemporary', books: CONTEMPORARY_BOOKS,  query: 'contemporary literary fiction' },
+    { key: 'ya',           books: YA_BOOKS,            query: 'young adult bestseller coming of age' },
+    { key: 'mystery',      books: MYSTERY_BOOKS,       query: 'cozy mystery whodunit bestseller' },
+    { key: 'scifi',        books: SCIFI_BOOKS,         query: 'science fiction bestseller award' },
+    { key: 'booktok',      books: BOOKTOK_BOOKS,       query: 'booktok romance bestseller' },
+];
+
 function buildForYouQueries() {
     const books = window.mochiGetBooks();
     if (!books.length) return ['romance fiction bestseller', 'fantasy novel popular', 'contemporary romance'];
 
+    // Prefer high-rated read books, then all read books, then everything
     const readBooks = books.filter(b => b.status === 'read');
     const highRated = readBooks.filter(b => (b.rating || 0) >= 4);
     const source = highRated.length ? highRated : readBooks.length ? readBooks : books;
 
-    // Top tags
-    const tagCounts = {};
-    source.forEach(b => (b.tags || []).forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
-    const topTags = Object.entries(tagCounts).sort((a,b) => b[1]-a[1]).slice(0,3).map(e => e[0]);
+    const shelfLower = new Set(source.map(b => b.title.toLowerCase().trim()));
 
-    // Top authors
+    // Detect genre affinity: count how many shelf books appear in each curated list
+    const genreMatches = GENRE_AFFINITY_MAPS
+        .map(cat => ({
+            query: cat.query,
+            score: cat.books.filter(b => shelfLower.has(b.title.toLowerCase().trim())).length,
+        }))
+        .filter(g => g.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
+        .map(g => g.query);
+
+    // Top authors — search directly by their name
     const authorCounts = {};
     source.forEach(b => {
         if (b.author && b.author !== 'Unknown') {
             authorCounts[b.author] = (authorCounts[b.author] || 0) + 1;
         }
     });
-    const topAuthors = Object.entries(authorCounts).sort((a,b) => b[1]-a[1]).slice(0,2).map(e => e[0]);
+    const topAuthors = Object.entries(authorCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 2)
+        .map(e => e[0]);
+
+    // Tags as a bonus signal (if user has tagged books)
+    const tagCounts = {};
+    source.forEach(b => (b.tags || []).forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
+    const topTags = Object.entries(tagCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 2)
+        .map(e => e[0]);
 
     const queries = [];
+    queries.push(...genreMatches);
+    topAuthors.forEach(author => queries.push(`${author} fiction novel`));
     topTags.forEach(tag => queries.push(`${tag} novel fiction`));
-    topAuthors.forEach(author => queries.push(`books similar to ${author}`));
 
-    // Fallbacks by status patterns
     if (!queries.length) {
-        if (books.some(b => b.status === 'read')) queries.push('romance bestseller', 'fantasy fiction');
-        else queries.push('popular fiction bestseller', 'contemporary romance novel');
+        queries.push('romance bestseller', 'fantasy fiction', 'contemporary romance novel');
     }
 
     return queries;
@@ -860,32 +891,26 @@ function appendSkeletons(count = 6) {
     grid.appendChild(spinner);
 }
 
+function safeText(el, text) { el.textContent = text; }
+
 function createCard(book, onShelf, colorIdx) {
     const card = document.createElement('div');
     card.className = 'discover-card';
     const fallback = FALLBACK_COLORS[colorIdx % FALLBACK_COLORS.length];
 
-    const subjectsHTML = book.subjects?.length
-        ? `<div class="disc-subjects">${book.subjects.slice(0,2).map(s => `<span class="disc-subject">${s}</span>`).join('')}</div>`
-        : '';
-
-    const blurbHTML = book.blurb
-        ? `<div class="disc-blurb" id="blurb-${colorIdx}">${book.blurb}</div>`
-        : `<div class="disc-blurb" id="blurb-${colorIdx}"></div>`;
-
     card.innerHTML = `
         <div class="disc-cover-wrap">
             <div class="disc-cover-loader"></div>
-            <img style="display:none" alt="${book.title} cover">
+            <img style="display:none" alt="">
             <div class="disc-cover-fallback" style="background:${fallback}">
-                <span class="disc-fb-title">${book.title}</span>
+                <span class="disc-fb-title"></span>
             </div>
             ${onShelf ? '<span class="on-shelf-badge">On shelf ✓</span>' : ''}
         </div>
-        <div class="disc-title">${book.title}</div>
-        <div class="disc-author">${book.author}</div>
-        ${blurbHTML}
-        ${subjectsHTML}
+        <div class="disc-title"></div>
+        <div class="disc-author"></div>
+        <div class="disc-blurb"></div>
+        <div class="disc-subjects"></div>
         <div class="add-wrap">
             ${onShelf
                 ? `<div class="btn-on-shelf">✓ On your shelf</div>`
@@ -898,6 +923,24 @@ function createCard(book, onShelf, colorIdx) {
             }
         </div>
     `;
+
+    // Set text safely (no XSS risk)
+    card.querySelector('img').alt = book.title + ' cover';
+    safeText(card.querySelector('.disc-fb-title'), book.title);
+    safeText(card.querySelector('.disc-title'), book.title);
+    safeText(card.querySelector('.disc-author'), book.author);
+    if (book.blurb) safeText(card.querySelector('.disc-blurb'), book.blurb);
+
+    // Subjects — create elements instead of innerHTML
+    if (book.subjects?.length) {
+        const subjectsEl = card.querySelector('.disc-subjects');
+        book.subjects.slice(0, 2).forEach(s => {
+            const span = document.createElement('span');
+            span.className = 'disc-subject';
+            span.textContent = s;
+            subjectsEl.appendChild(span);
+        });
+    }
 
     // Load cover
     const img = card.querySelector('img');
@@ -1111,8 +1154,14 @@ function openBookModal(book) {
 
     document.getElementById('modalTitle').textContent = book.title;
     document.getElementById('modalAuthor').textContent = 'by ' + book.author;
-    document.getElementById('modalSubjects').innerHTML = (book.subjects || []).slice(0, 4)
-        .map(s => `<span class="modal-subject">${s}</span>`).join('');
+    const subjectsEl = document.getElementById('modalSubjects');
+    subjectsEl.innerHTML = '';
+    (book.subjects || []).slice(0, 4).forEach(s => {
+        const span = document.createElement('span');
+        span.className = 'modal-subject';
+        span.textContent = s;
+        subjectsEl.appendChild(span);
+    });
 
     // Summary — use cached blurb first, then fetch full
     const summaryEl = document.getElementById('modalSummary');

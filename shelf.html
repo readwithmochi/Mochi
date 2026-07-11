@@ -869,32 +869,39 @@ function renderFilters(books) {
         });
 
     const all = [...core, ...authors, ...topTags];
-    document.getElementById('filters').innerHTML = all.map(f =>
-        `<button class="filter-btn${activeFilter === f.key ? ' active' : ''}" data-filter="${f.key}">${f.label}</button>`
-    ).join('');
-
-    document.querySelectorAll('.filter-btn').forEach(btn => {
+    const filtersEl = document.getElementById('filters');
+    filtersEl.innerHTML = '';
+    all.forEach(f => {
+        const btn = document.createElement('button');
+        btn.className = `filter-btn${activeFilter === f.key ? ' active' : ''}`;
+        btn.dataset.filter = f.key;
+        btn.textContent = f.label;
         btn.addEventListener('click', () => {
             activeFilter = btn.dataset.filter;
             renderShelf();
         });
+        filtersEl.appendChild(btn);
     });
 }
 
 function updatePetMessage(books) {
     const reading = books.filter(b => b.status === 'reading');
     const read = books.filter(b => b.status === 'read');
-    let msg;
+    const msgEl = document.getElementById('petMessage');
+    msgEl.innerHTML = '<strong>Mochi says...</strong> ';
     if (reading.length > 0) {
-        msg = `How's <em>${reading[0].title}</em> going? 📖`;
+        msgEl.appendChild(document.createTextNode("How's "));
+        const em = document.createElement('em');
+        em.textContent = reading[0].title;
+        msgEl.appendChild(em);
+        msgEl.appendChild(document.createTextNode(' going? 📖'));
     } else if (read.length >= 5) {
-        msg = `${read.length} books read — you're amazing! 🌸`;
+        msgEl.appendChild(document.createTextNode(`${read.length} books read — you're amazing! 🌸`));
     } else if (books.length === 0) {
-        msg = 'Add your first book! ✨';
+        msgEl.appendChild(document.createTextNode('Add your first book! ✨'));
     } else {
-        msg = 'Keep reading, bestie! 🐰';
+        msgEl.appendChild(document.createTextNode('Keep reading, bestie! 🐰'));
     }
-    document.getElementById('petMessage').innerHTML = `<strong>Mochi says...</strong> ${msg}`;
 }
 
 function renderShelf() {
@@ -924,27 +931,40 @@ function createBookCard(book) {
     card.className = `book-card${book.favourite ? ' is-fave' : ''}`;
     card.dataset.id = book.id;
 
-    const tagsHTML = book.tags.slice(0,3).map(t => `<span class="tag">${t}</span>`).join('');
     const ratingBadge = book.rating ? `<span class="rating-badge">${'⭐'.repeat(book.rating)}</span>` : '';
 
     card.innerHTML = `
         <div class="book-cover-wrap">
             <div class="cover-loading"></div>
-            <img style="display:none" alt="${book.title} cover">
+            <img style="display:none" alt="">
             <div class="book-cover-fallback" style="background:${book.fallbackColor}">
-                <span class="fb-title">${book.title}</span>
-                <span class="fb-author">${book.author}</span>
+                <span class="fb-title"></span>
+                <span class="fb-author"></span>
             </div>
             <button class="fave-btn" title="Favourite">${book.favourite ? '♥' : '♡'}</button>
-            <span class="status-badge">${STATUS_LABELS[book.status]}</span>
+            <span class="status-badge"></span>
             ${ratingBadge}
         </div>
         <div class="book-info">
-            <span class="book-title">${book.title}</span>
-            <span class="book-author">${book.author}</span>
-            <div class="book-tags">${tagsHTML}</div>
+            <span class="book-title"></span>
+            <span class="book-author"></span>
+            <div class="book-tags"></div>
         </div>
     `;
+
+    card.querySelector('img').alt = book.title + ' cover';
+    card.querySelector('.fb-title').textContent = book.title;
+    card.querySelector('.fb-author').textContent = book.author;
+    card.querySelector('.status-badge').textContent = STATUS_LABELS[book.status];
+    card.querySelector('.book-title').textContent = book.title;
+    card.querySelector('.book-author').textContent = book.author;
+    const tagsEl = card.querySelector('.book-tags');
+    book.tags.slice(0, 3).forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.textContent = t;
+        tagsEl.appendChild(span);
+    });
 
     const img = card.querySelector('img');
     const fallback = card.querySelector('.book-cover-fallback');
@@ -1019,11 +1039,16 @@ function renderAddTags() {
     addTags.forEach((tag, idx) => {
         const pill = document.createElement('span');
         pill.className = 'tag';
-        pill.innerHTML = `${tag} <button class="tag-remove" data-idx="${idx}">✕</button>`;
-        pill.querySelector('.tag-remove').addEventListener('click', () => {
+        pill.textContent = tag + ' ';
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'tag-remove';
+        removeBtn.dataset.idx = idx;
+        removeBtn.textContent = '✕';
+        removeBtn.addEventListener('click', () => {
             addTags.splice(idx, 1);
             renderAddTags();
         });
+        pill.appendChild(removeBtn);
         wrap.insertBefore(pill, input);
     });
 }
@@ -1041,20 +1066,35 @@ async function performSearch(query) {
             el.innerHTML = `<div class="search-hint"><span class="hint-emoji">😢</span>No results found — try a different search</div>`;
             return;
         }
-        el.innerHTML = results.map((r, i) => {
-            const coverHTML = r.coverId
-                ? `<img class="search-result-cover" src="https://covers.openlibrary.org/b/id/${r.coverId}-S.jpg" alt="${r.title}">`
-                : `<div class="search-result-cover no-img">📚</div>`;
-            return `<div class="search-result" data-idx="${i}">
-                ${coverHTML}
-                <div>
-                    <div class="search-result-title">${r.title}</div>
-                    <div class="search-result-author">${r.author}</div>
-                </div>
-            </div>`;
-        }).join('');
-        el.querySelectorAll('.search-result').forEach((el, i) => {
-            el.addEventListener('click', () => selectBook(results[i]));
+        el.innerHTML = '';
+        results.forEach((r, i) => {
+            const row = document.createElement('div');
+            row.className = 'search-result';
+            row.dataset.idx = i;
+            if (r.coverId) {
+                const img = document.createElement('img');
+                img.className = 'search-result-cover';
+                img.src = `https://covers.openlibrary.org/b/id/${r.coverId}-S.jpg`;
+                img.alt = r.title;
+                row.appendChild(img);
+            } else {
+                const ph = document.createElement('div');
+                ph.className = 'search-result-cover no-img';
+                ph.textContent = '📚';
+                row.appendChild(ph);
+            }
+            const meta = document.createElement('div');
+            const titleEl = document.createElement('div');
+            titleEl.className = 'search-result-title';
+            titleEl.textContent = r.title;
+            const authorEl = document.createElement('div');
+            authorEl.className = 'search-result-author';
+            authorEl.textContent = r.author;
+            meta.appendChild(titleEl);
+            meta.appendChild(authorEl);
+            row.appendChild(meta);
+            row.addEventListener('click', () => selectBook(results[i]));
+            el.appendChild(row);
         });
     } catch (_) {
         el.innerHTML = `<div class="search-hint"><span class="hint-emoji">😓</span>Something went wrong — try again</div>`;
@@ -1080,16 +1120,31 @@ function syncAddFormFields(status) {
 
 function selectBook(book) {
     selectedBook = book;
-    const coverHTML = book.coverId
-        ? `<img class="selected-book-cover" src="https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg" alt="${book.title}">`
-        : `<div class="selected-book-cover fallback" style="background:${randomFallback()}">📚</div>`;
-    document.getElementById('selectedBookPreview').innerHTML = `
-        ${coverHTML}
-        <div>
-            <div class="stitle">${book.title}</div>
-            <div class="sauthor">${book.author}</div>
-        </div>
-    `;
+    const preview = document.getElementById('selectedBookPreview');
+    preview.innerHTML = '';
+    if (book.coverId) {
+        const img = document.createElement('img');
+        img.className = 'selected-book-cover';
+        img.src = `https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg`;
+        img.alt = book.title;
+        preview.appendChild(img);
+    } else {
+        const ph = document.createElement('div');
+        ph.className = 'selected-book-cover fallback';
+        ph.style.background = randomFallback();
+        ph.textContent = '📚';
+        preview.appendChild(ph);
+    }
+    const meta = document.createElement('div');
+    const titleEl = document.createElement('div');
+    titleEl.className = 'stitle';
+    titleEl.textContent = book.title;
+    const authorEl = document.createElement('div');
+    authorEl.className = 'sauthor';
+    authorEl.textContent = book.author;
+    meta.appendChild(titleEl);
+    meta.appendChild(authorEl);
+    preview.appendChild(meta);
     document.getElementById('searchStep').style.display = 'none';
     document.getElementById('addBookForm').classList.add('visible');
     document.getElementById('addModalTitle').textContent = 'Add details ✨';

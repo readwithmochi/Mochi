@@ -208,8 +208,8 @@ function renderPage() {
     const today = todayValue();
 
     const coverHTML = book.coverId
-        ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-L.jpg" alt="${book.title}" onerror="this.style.display='none'">`
-        : `<div class="cover-thumb-fallback" style="background:${book.fallbackColor||'#C97A8E'}">${book.title}</div>`;
+        ? `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-L.jpg" alt="" onerror="this.style.display='none'">`
+        : `<div class="cover-thumb-fallback" style="background:${book.fallbackColor||'#C97A8E'}"></div>`;
 
     const starsHTML = Array.from({length:5}, (_,i) =>
         `<span class="star${i < currentRating ? ' lit':''}" data-star="${i+1}">★</span>`
@@ -222,8 +222,8 @@ function renderPage() {
         <div class="book-header">
             <div class="cover-thumb">${coverHTML}</div>
             <div class="book-title-area">
-                <div class="book-title">${book.title}</div>
-                <div class="book-author">by ${book.author}</div>
+                <div class="book-title"></div>
+                <div class="book-author"></div>
             </div>
         </div>
 
@@ -267,7 +267,7 @@ function renderPage() {
 
             <div class="field-group">
                 <div class="field-label">Notes &amp; review</div>
-                <textarea class="notes-input" id="notesInput" placeholder="What did you think?">${book.notes||''}</textarea>
+                <textarea class="notes-input" id="notesInput" placeholder="What did you think?"></textarea>
             </div>
         </div>
 
@@ -279,6 +279,15 @@ function renderPage() {
             <button class="btn-remove" id="removeBtn">Remove from shelf</button>
         </div>
     `;
+
+    // Set user data safely after HTML is built
+    const imgEl = page.querySelector('.cover-thumb img');
+    if (imgEl) imgEl.alt = book.title;
+    const fallbackEl = page.querySelector('.cover-thumb-fallback');
+    if (fallbackEl) fallbackEl.textContent = book.title;
+    page.querySelector('.book-title').textContent = book.title;
+    page.querySelector('.book-author').textContent = 'by ' + book.author;
+    page.querySelector('#notesInput').value = book.notes || '';
 
     document.querySelectorAll('#starRow .star').forEach(star => {
         star.addEventListener('click', () => {
