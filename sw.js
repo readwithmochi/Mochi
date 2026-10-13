@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mochi-v1';
+const CACHE_NAME = 'mochi-v2';
 const urlsToCache = [
   '/Mochi/',
   '/Mochi/index.html',
@@ -8,19 +8,35 @@ const urlsToCache = [
   '/Mochi/wrapped.html',
   '/Mochi/discover.html',
   '/Mochi/account.html',
+  '/Mochi/premium.html',
   '/Mochi/mochi.js',
   '/Mochi/icon.svg'
 ];
 
 self.addEventListener('install', event => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
 });
 
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
+      .then(() => self.clients.claim())
+  );
+});
+
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    fetch(event.request)
+      .then(response => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });
 
