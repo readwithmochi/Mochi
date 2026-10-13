@@ -327,6 +327,219 @@
             border: 3px solid var(--pink-light);
         }
 
+        /* ── Room themes (Mochi Pro) ── */
+        .room-scene[data-theme="lavender"] .room-wall { background: #F0EAFB; }
+        .room-scene[data-theme="lavender"] .room-wall::after { background: #E4D8F5; border-top-color: #D4C0EC; }
+        .room-scene[data-theme="lavender"] .room-floor { background: linear-gradient(to bottom, #B8A8D8, #9A88BE); }
+        .room-scene[data-theme="lavender"] .rug { background: radial-gradient(ellipse, #D8C8F0 60%, #EDE4FA 100%); border-color: #D4C0EC; }
+
+        .room-scene[data-theme="sage"] .room-wall { background: #EAF3EA; }
+        .room-scene[data-theme="sage"] .room-wall::after { background: #DCEBDC; border-top-color: #C5DDC5; }
+        .room-scene[data-theme="sage"] .room-floor { background: linear-gradient(to bottom, #9AB894, #7A9B74); }
+        .room-scene[data-theme="sage"] .rug { background: radial-gradient(ellipse, #C8E0C0 60%, #E4F0E0 100%); border-color: #B5D4AC; }
+
+        .room-scene[data-theme="golden"] .room-wall { background: #FFF3D6; }
+        .room-scene[data-theme="golden"] .room-wall::after { background: #FFE8B8; border-top-color: #F0CE85; }
+        .room-scene[data-theme="golden"] .room-floor { background: linear-gradient(to bottom, #E0B860, #C99A2E); }
+        .room-scene[data-theme="golden"] .rug { background: radial-gradient(ellipse, #FFE0A0 60%, #FFF3D6 100%); border-color: #F0CE85; }
+
+        /* ── Companion looks (bundled with theme) ── */
+        /* Luna the Cat — lavender */
+        .room-scene[data-theme="lavender"] .ear { height: 34px; border-radius: 50% 50% 6px 6px; background: #E4D8F5; box-shadow: inset 0 0 0 2px #D4C0EC; }
+        .room-scene[data-theme="lavender"] .ear-inner { height: 18px; background: #C9AEE0; }
+        .room-scene[data-theme="lavender"] .bunny-head,
+        .room-scene[data-theme="lavender"] .bunny-body { background: #EDE4F5; }
+        .room-scene[data-theme="lavender"] .tummy { background: rgba(245,240,250,0.9); }
+        .room-scene[data-theme="lavender"] .paw { background: #EDE4F5; }
+        .room-scene[data-theme="lavender"] .cheek { background: #D8C8ED; }
+        .room-scene[data-theme="lavender"] .bunny-head::before,
+        .room-scene[data-theme="lavender"] .bunny-head::after {
+            content: ''; position: absolute; top: 44px; width: 20px; height: 1.5px;
+            background: #B8A0D0; box-shadow: 0 5px 0 #B8A0D0, 0 10px 0 #B8A0D0;
+        }
+        .room-scene[data-theme="lavender"] .bunny-head::before { left: -16px; transform: rotate(-6deg); }
+        .room-scene[data-theme="lavender"] .bunny-head::after { right: -16px; transform: rotate(6deg); }
+        .room-scene[data-theme="lavender"] .speech-bubble { color: #3D2A52; }
+
+        /* Theo the Bear — sage */
+        .room-scene[data-theme="sage"] .ear { width: 26px; height: 26px; border-radius: 50%; background: #E8D4B8; box-shadow: inset 0 0 0 2px #D4BB94; }
+        .room-scene[data-theme="sage"] .ear-left { transform: rotate(-4deg); }
+        .room-scene[data-theme="sage"] .ear-right { transform: rotate(4deg); }
+        .room-scene[data-theme="sage"] .ear-inner { width: 12px; height: 12px; border-radius: 50%; top: 7px; background: #C5A578; }
+        .room-scene[data-theme="sage"] .bunny-head,
+        .room-scene[data-theme="sage"] .bunny-body { background: #E8D4B8; }
+        .room-scene[data-theme="sage"] .tummy { background: rgba(245,235,216,0.9); }
+        .room-scene[data-theme="sage"] .paw { background: #E8D4B8; }
+        .room-scene[data-theme="sage"] .cheek { background: #D4B88E; }
+
+        /* Sunny the Fox — golden */
+        .room-scene[data-theme="golden"] .ear { height: 46px; border-radius: 50% 50% 4px 4px; background: #F5B878; box-shadow: inset 0 0 0 2px #E89850; }
+        .room-scene[data-theme="golden"] .ear-left { transform: rotate(-6deg); }
+        .room-scene[data-theme="golden"] .ear-right { transform: rotate(6deg); }
+        .room-scene[data-theme="golden"] .ear-inner { top: 4px; height: 16px; width: 8px; background: #6B4423; }
+        .room-scene[data-theme="golden"] .bunny-head,
+        .room-scene[data-theme="golden"] .bunny-body { background: #F5B878; }
+        .room-scene[data-theme="golden"] .tummy { background: rgba(255,248,237,0.95); }
+        .room-scene[data-theme="golden"] .paw { background: #F5B878; }
+        .room-scene[data-theme="golden"] .cheek { background: #E89850; }
+
+        /* ── Wood/curtain/plant recolor per companion ── */
+        .room-scene[data-theme="lavender"] .window-frame,
+        .room-scene[data-theme="lavender"] .shelf-unit,
+        .room-scene[data-theme="lavender"] .table-top,
+        .room-scene[data-theme="lavender"] .window-sill,
+        .room-scene[data-theme="lavender"] .fp-pot { background: #3D2E4D; }
+        .room-scene[data-theme="lavender"] .table-leg,
+        .room-scene[data-theme="lavender"] .fp-rim { background: #241B2E; }
+        .room-scene[data-theme="lavender"] .curtain-left .curtain-inner { background: linear-gradient(to right, #4A3560, #241B2E); }
+        .room-scene[data-theme="lavender"] .curtain-right .curtain-inner { background: linear-gradient(to left, #4A3560, #241B2E); }
+        .room-scene[data-theme="lavender"] .curtain-tie { background: #8B6BB8; }
+        .room-scene[data-theme="lavender"] .win-leaf,
+        .room-scene[data-theme="lavender"] .sp-leaves,
+        .room-scene[data-theme="lavender"] .fp-leaf { background: #6B5490; }
+        .room-scene[data-theme="lavender"] .shelf-row { background: #E4D8F5; }
+
+        .room-scene[data-theme="sage"] .window-frame,
+        .room-scene[data-theme="sage"] .shelf-unit,
+        .room-scene[data-theme="sage"] .table-top,
+        .room-scene[data-theme="sage"] .window-sill,
+        .room-scene[data-theme="sage"] .fp-pot { background: #B89B6E; }
+        .room-scene[data-theme="sage"] .table-leg,
+        .room-scene[data-theme="sage"] .fp-rim { background: #8F7550; }
+        .room-scene[data-theme="sage"] .curtain-left .curtain-inner { background: linear-gradient(to right, #A8C5A0, #E4F0E0); }
+        .room-scene[data-theme="sage"] .curtain-right .curtain-inner { background: linear-gradient(to left, #A8C5A0, #E4F0E0); }
+        .room-scene[data-theme="sage"] .curtain-tie { background: #7A9B74; }
+        .room-scene[data-theme="sage"] .shelf-row { background: #F1EDE0; }
+
+        .room-scene[data-theme="golden"] .window-frame,
+        .room-scene[data-theme="golden"] .shelf-unit,
+        .room-scene[data-theme="golden"] .table-top,
+        .room-scene[data-theme="golden"] .window-sill,
+        .room-scene[data-theme="golden"] .fp-pot { background: #D4923A; }
+        .room-scene[data-theme="golden"] .table-leg,
+        .room-scene[data-theme="golden"] .fp-rim { background: #A8701F; }
+        .room-scene[data-theme="golden"] .curtain-left .curtain-inner { background: linear-gradient(to right, #F0CE85, #FFF3D6); }
+        .room-scene[data-theme="golden"] .curtain-right .curtain-inner { background: linear-gradient(to left, #F0CE85, #FFF3D6); }
+        .room-scene[data-theme="golden"] .curtain-tie { background: #E0A030; }
+        .room-scene[data-theme="golden"] .win-leaf,
+        .room-scene[data-theme="golden"] .sp-leaves,
+        .room-scene[data-theme="golden"] .fp-leaf { background: #C99A4A; }
+        .room-scene[data-theme="golden"] .shelf-row { background: #FFF3D6; }
+
+        /* ── Signature decor pieces (hidden unless companion active) ── */
+        .luna-candle, .luna-plaque, .theo-cushions, .theo-mug, .sunny-lights, .sunny-trophy { display: none; }
+
+        /* Luna — candles (replace floor plants) + gothic plaque */
+        .room-scene[data-theme="lavender"] .floor-plant { display: none; }
+        .room-scene[data-theme="lavender"] .luna-candle { display: block; position: absolute; bottom: 0; z-index: 4; }
+        .luna-candle-left { left: 150px; }
+        .luna-candle-right { left: 195px; }
+        .luna-candle-body { width: 12px; height: 32px; background: #E8E0F0; border-radius: 2px; margin: 0 auto; box-shadow: inset -3px 0 0 rgba(74,48,64,0.1); }
+        .luna-candle-flame {
+            width: 8px; height: 12px; margin: 0 auto; border-radius: 50% 50% 50% 50% / 65% 65% 35% 35%;
+            background: radial-gradient(ellipse at center, #FFD97A 0%, #F0A030 60%, transparent 100%);
+            box-shadow: 0 0 10px 3px rgba(240,160,48,0.55);
+            animation: candle-flicker 2s ease-in-out infinite;
+        }
+        @keyframes candle-flicker { 0%,100% { transform: scaleY(1) translateX(0); } 50% { transform: scaleY(1.1) translateX(0.5px); } }
+        .room-scene[data-theme="lavender"] .luna-plaque {
+            display: block; position: absolute; top: 14px; left: 24px; z-index: 2;
+            background: #241B2E; border: 1.5px solid #8B6BB8; border-radius: 6px;
+            padding: 5px 10px; font-family: 'Playfair Display', serif; font-style: italic;
+            font-size: 0.68rem; color: #D8C8F0; letter-spacing: 0.4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        /* Theo — cushion pile + mug */
+        .room-scene[data-theme="sage"] .theo-cushions {
+            display: flex; position: absolute; bottom: 8px; left: 50%; transform: translateX(-125px);
+            z-index: 4;
+        }
+        .theo-cushion { width: 34px; height: 22px; border-radius: 12px; margin-left: -8px; box-shadow: 0 3px 8px rgba(58,50,38,0.15); }
+        .theo-cushion:first-child { margin-left: 0; }
+        .theo-cushion-1 { background: #9AB894; transform: rotate(-6deg); }
+        .theo-cushion-2 { background: #D9CBAE; transform: rotate(3deg) translateY(-3px); z-index: 1; }
+        .theo-cushion-3 { background: #B5D4AC; transform: rotate(9deg); }
+        .room-scene[data-theme="sage"] .theo-mug {
+            display: block; position: absolute; bottom: 38px; left: 38px; z-index: 7;
+        }
+        .theo-mug-body { width: 14px; height: 12px; background: #FFFDF8; border-radius: 0 0 4px 4px; border: 1.5px solid #B89B6E; }
+        .theo-mug-handle { width: 6px; height: 8px; border: 1.5px solid #B89B6E; border-left: none; border-radius: 0 6px 6px 0; position: absolute; top: 1px; right: -5px; }
+        .theo-steam { position: absolute; top: -10px; left: 4px; width: 2px; height: 8px; background: rgba(154,184,148,0.5); border-radius: 2px; animation: steam-rise 2.5s ease-in-out infinite; }
+        @keyframes steam-rise { 0%,100% { opacity: 0.3; transform: translateY(0); } 50% { opacity: 0.7; transform: translateY(-4px); } }
+
+        /* Sunny — fairy lights + trophy */
+        .room-scene[data-theme="golden"] .sunny-lights {
+            display: flex; position: absolute; top: 4px; left: 0; right: 0; justify-content: space-evenly; z-index: 5;
+        }
+        .sunny-light-dot { width: 6px; height: 6px; border-radius: 50%; background: #FFD97A; box-shadow: 0 0 8px 2px rgba(255,217,122,0.7); animation: light-twinkle 1.8s ease-in-out infinite; }
+        .sunny-light-dot:nth-child(2n) { animation-delay: 0.4s; }
+        .sunny-light-dot:nth-child(3n) { animation-delay: 0.8s; }
+        @keyframes light-twinkle { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+        .room-scene[data-theme="golden"] .sunny-trophy {
+            display: block; position: absolute; bottom: 62px; right: 22px; z-index: 6;
+        }
+        .sunny-trophy-cup { width: 16px; height: 14px; background: linear-gradient(180deg, #FFD97A, #E0A030); border-radius: 3px 3px 8px 8px; margin: 0 auto; }
+        .sunny-trophy-base { width: 10px; height: 3px; background: #C2801A; border-radius: 1px; margin: 0 auto; }
+
+        /* ── Mini treat icons (per companion reward) ── */
+        .treat-mini { display: inline-block; vertical-align: bottom; margin-right: 3px; }
+        .treat-mini-candle-flame { width: 4px; height: 6px; margin: 0 auto; border-radius: 50%; background: radial-gradient(ellipse, #FFD97A 0%, #F0A030 70%, transparent 100%); }
+        .treat-mini-candle-body { width: 7px; height: 12px; background: #E8E0F0; border-radius: 1px; margin: 0 auto; }
+        .treat-mini-mug-body { width: 10px; height: 8px; background: #FFFDF8; border: 1.2px solid #B89B6E; border-radius: 0 0 3px 3px; position: relative; }
+        .treat-mini-mug-handle { width: 4px; height: 5px; border: 1.2px solid #B89B6E; border-left: none; border-radius: 0 4px 4px 0; position: absolute; top: 1px; right: -3.5px; }
+        .treat-mini-star { width: 12px; height: 12px; background: #E0A030; clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
+
+        /* ── Theme picker ── */
+        .theme-picker {
+            margin-top: 22px;
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 20px;
+            padding: 20px 22px;
+        }
+        .theme-picker-head {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 14px;
+        }
+        .theme-picker-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem; font-weight: 700; color: var(--text);
+        }
+        .theme-picker-title span { color: var(--pink-deep); }
+        .theme-swatches { display: flex; gap: 14px; flex-wrap: wrap; }
+        .theme-swatch {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            background: none; border: none; cursor: pointer;
+            font-family: 'Nunito', sans-serif; padding: 4px;
+        }
+        .swatch-circle {
+            width: 46px; height: 46px; border-radius: 50%;
+            border: 3px solid transparent;
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            box-shadow: 0 3px 10px rgba(74,48,64,0.15);
+            transition: transform 0.15s, border-color 0.15s;
+        }
+        .theme-swatch:hover .swatch-circle { transform: translateY(-3px); }
+        .theme-swatch.active .swatch-circle { border-color: var(--pink-deep); }
+        .swatch-circle.locked::after {
+            content: '🔒';
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem;
+            background: rgba(255,255,255,0.55);
+            border-radius: 50%;
+        }
+        .swatch-cottage { background: linear-gradient(135deg, #FEF0E8, #DDB882); }
+        .swatch-lavender { background: linear-gradient(135deg, #F0EAFB, #9A88BE); }
+        .swatch-sage { background: linear-gradient(135deg, #EAF3EA, #7A9B74); }
+        .swatch-golden { background: linear-gradient(135deg, #FFF3D6, #C99A2E); }
+        .swatch-label { font-size: 0.68rem; font-weight: 700; color: var(--text-muted); }
+        .swatch-sub { font-size: 0.6rem; color: var(--text-muted); opacity: 0.75; }
+        .theme-picker-sub { font-size: 0.78rem; color: var(--text-muted); margin: -8px 0 16px; }
+
 
         /* ── Mochi bunny ── */
         .mochi-wrap {
@@ -346,7 +559,7 @@
             border-radius: 16px;
             padding: 8px 14px;
             font-size: 0.78rem;
-            color: var(--text);
+            color: #4A3040;
             text-align: center;
             max-width: 190px;
             line-height: 1.5;
@@ -654,18 +867,19 @@
         <a href="discover.html">Discover</a>
         <a href="pet.html" class="active">My Pet</a>
         <a href="wrapped.html">Wrapped</a>
+        <a href="premium.html">✦ Pro</a>
     </nav>
 </header>
 
 <div class="pet-page">
 
     <div class="page-heading">
-        <h1>Mochi's <em>little room.</em></h1>
+        <h1 id="pageHeading">Mochi's <em>little room.</em></h1>
         <p id="pageSubtitle">She's waiting for you 🌸</p>
     </div>
 
     <!-- ── Room Scene ── -->
-    <div class="room-scene">
+    <div class="room-scene" id="roomScene">
         <div class="room-wall">
 
             <!-- Window -->
@@ -702,6 +916,13 @@
                 <div class="curtain-tie"></div>
             </div>
 
+            <!-- Companion signature decor (shown/hidden per theme) -->
+            <div class="luna-plaque">here be villains</div>
+            <div class="sunny-lights">
+                <span class="sunny-light-dot"></span><span class="sunny-light-dot"></span><span class="sunny-light-dot"></span>
+                <span class="sunny-light-dot"></span><span class="sunny-light-dot"></span><span class="sunny-light-dot"></span>
+            </div>
+
             <!-- Wall frames -->
 
             <!-- Left shelf -->
@@ -732,6 +953,29 @@
                 <div class="fp-pot"></div>
             </div>
 
+            <!-- Luna's candles (replace floor plants) -->
+            <div class="luna-candle luna-candle-left">
+                <div class="luna-candle-flame"></div>
+                <div class="luna-candle-body"></div>
+            </div>
+            <div class="luna-candle luna-candle-right">
+                <div class="luna-candle-flame"></div>
+                <div class="luna-candle-body"></div>
+            </div>
+
+            <!-- Theo's cushion pile -->
+            <div class="theo-cushions">
+                <div class="theo-cushion theo-cushion-1"></div>
+                <div class="theo-cushion theo-cushion-2"></div>
+                <div class="theo-cushion theo-cushion-3"></div>
+            </div>
+
+            <!-- Sunny's trophy -->
+            <div class="sunny-trophy">
+                <div class="sunny-trophy-cup"></div>
+                <div class="sunny-trophy-base"></div>
+            </div>
+
             <!-- Treat table -->
             <div class="treat-table">
                 <div class="table-items" id="treatItems"></div>
@@ -739,6 +983,11 @@
                 <div class="table-legs">
                     <div class="table-leg"></div>
                     <div class="table-leg"></div>
+                </div>
+                <!-- Theo's mug -->
+                <div class="theo-mug">
+                    <div class="theo-steam"></div>
+                    <div class="theo-mug-body"><div class="theo-mug-handle"></div></div>
                 </div>
             </div>
 
@@ -792,7 +1041,7 @@
 
         <div class="stat-card">
             <span class="stat-card-icon" id="moodIcon">🌸</span>
-            <div class="stat-card-label">Mochi's mood</div>
+            <div class="stat-card-label" id="moodCardLabel">Mochi's mood</div>
             <div class="stat-card-value" id="statMoodLabel" style="font-size:1rem">—</div>
             <div class="mood-badge" id="statMoodBadge">Loading...</div>
         </div>
@@ -806,6 +1055,36 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- ── Companion picker ── -->
+    <div class="theme-picker">
+        <div class="theme-picker-head">
+            <span class="theme-picker-title">Pick your companion <span>🐾</span></span>
+        </div>
+        <p class="theme-picker-sub">Every companion brings their own room, personality, and vibe.</p>
+        <div class="theme-swatches" id="themeSwatches">
+            <button class="theme-swatch" data-theme="cottage">
+                <span class="swatch-circle swatch-cottage">🐰</span>
+                <span class="swatch-label">Mochi</span>
+                <span class="swatch-sub">the Bunny</span>
+            </button>
+            <button class="theme-swatch" data-theme="lavender">
+                <span class="swatch-circle swatch-lavender">🐱</span>
+                <span class="swatch-label">Luna ✦</span>
+                <span class="swatch-sub">the Cat</span>
+            </button>
+            <button class="theme-swatch" data-theme="sage">
+                <span class="swatch-circle swatch-sage">🐻</span>
+                <span class="swatch-label">Theo ✦</span>
+                <span class="swatch-sub">the Bear</span>
+            </button>
+            <button class="theme-swatch" data-theme="golden">
+                <span class="swatch-circle swatch-golden">🦊</span>
+                <span class="swatch-label">Sunny ✦</span>
+                <span class="swatch-sub">the Fox</span>
+            </button>
+        </div>
     </div>
 </div>
 
@@ -864,78 +1143,142 @@ function populateShelves(books) {
     });
 }
 
-// ── Mood system ──
-const MOODS = {
-    excited: {
-        key: 'excited',
-        label: 'Excited',
-        icon: '✨',
-        badge: '✨ On a roll!',
-        messages: [
+// ── Mood system (per-companion voice) ──
+const MOOD_LABELS = { excited: 'Excited', cozy: 'Cozy', happy: 'Happy', reading: 'Focused', sleepy: 'Sleepy', hungry: 'Hungry' };
+
+const COMPANION_MOODS = {
+    cottage: {
+        excited: { icon: '✨', badge: '✨ On a roll!', messages: [
             "You finished a 5-star book! I'm so proud of you 🧁",
             "Bestie that book was AMAZING wasn't it 🌟",
             "Five stars! You have such good taste 🍰",
-        ]
-    },
-    cozy: {
-        key: 'cozy',
-        label: 'Cozy',
-        icon: '🧁',
-        badge: '🧁 Living her best life',
-        messages: [
+        ]},
+        cozy: { icon: '🧁', badge: '🧁 Living her best life', messages: [
             "This is my happy place 🧁 Keep reading!",
             "So many books, so cozy 🌸 You're doing amazing.",
             "I made us both a cupcake to celebrate 🧁✨",
-        ]
-    },
-    happy: {
-        key: 'happy',
-        label: 'Happy',
-        icon: '🌸',
-        badge: '🌸 Happy & content',
-        messages: [
+        ]},
+        happy: { icon: '🌸', badge: '🌸 Happy & content', messages: [
             "Reading makes everything sweeter 🍰",
             "Hi bestie! What are we reading today? 📖",
             "Your shelf is looking so cute 🌸",
-        ]
-    },
-    reading: {
-        key: 'reading',
-        label: 'Focused',
-        icon: '📖',
-        badge: '📖 Rooting for you',
-        messages: [
+        ]},
+        reading: { icon: '📖', badge: '📖 Rooting for you', messages: [
             "Ooh, we're reading! I love this for us 📖",
             "Don't mind me, just cheering you on 🐰✨",
             "I'll have a cupcake ready for when you finish 🧁",
-        ]
-    },
-    sleepy: {
-        key: 'sleepy',
-        label: 'Sleepy',
-        icon: '💤',
-        badge: '💤 Waiting for you',
-        messages: [
+        ]},
+        sleepy: { icon: '💤', badge: '💤 Waiting for you', messages: [
             "Zzzz... wake me when you pick up a book 💤",
             "I'm just napping until you start reading again 🐰",
             "A little rest... but I miss reading with you 🌙",
-        ]
-    },
-    hungry: {
-        key: 'hungry',
-        label: 'Hungry',
-        icon: '🍰',
-        badge: '🍰 Feed me books!',
-        messages: [
+        ]},
+        hungry: { icon: '🍰', badge: '🍰 Feed me books!', messages: [
             "I'd love a cupcake... maybe add a book first? 🧁",
             "Your shelf is empty! Let's fix that together 📚",
             "No books yet? I believe in you! Start here 🌸",
-        ]
+        ]},
+    },
+    lavender: {
+        excited: { icon: '🔥', badge: '🔥 unhinged and thriving', messages: [
+            "5 stars? okay you actually have taste 🖤",
+            "villain arc engaged. proceed.",
+            "that book destroyed you and I'm obsessed",
+        ]},
+        cozy: { icon: '🕯️', badge: '🕯️ plotting in the dark (affectionately)', messages: [
+            "candles lit, morals questionable, let's go",
+            "this is the good kind of chaos",
+            "I'd say get some sun but... no",
+        ]},
+        happy: { icon: '🖤', badge: '🖤 content, dangerously so', messages: [
+            "your TBR has zero heroes and I respect it",
+            "okay this one's actually good, don't stop",
+            "we're doing great. suspiciously great.",
+        ]},
+        reading: { icon: '📖', badge: '📖 do not disturb', messages: [
+            "shh. main character is about to ruin everything.",
+            "reading time is sacred, obviously",
+            "don't talk to me or my emotional damage",
+        ]},
+        sleepy: { icon: '🌙', badge: '🌙 recovering from the last plot twist', messages: [
+            "I need a minute. that ending was criminal.",
+            "napping until you pick the next victim — I mean book",
+            "shhh, processing trauma (the fictional kind)",
+        ]},
+        hungry: { icon: '🥀', badge: '🥀 bored and slightly feral', messages: [
+            "empty shelf, empty soul. fix it.",
+            "give me a book with a morally grey love interest. now.",
+            "I'm not saying I'll misbehave, but. no promises.",
+        ]},
+    },
+    sage: {
+        excited: { icon: '☕', badge: '☕ mildly enthused', messages: [
+            "huh. that one was actually good.",
+            "five stars. wild. anyway, next chapter?",
+            "okay you got me invested. rare.",
+        ]},
+        cozy: { icon: '🧸', badge: '🧸 not moving, ever', messages: [
+            "this is the whole plan. sit. read. repeat.",
+            "comfortable. staying here forever, probably.",
+            "no notes. this is the life.",
+        ]},
+        happy: { icon: '🍃', badge: '🍃 fine. good, even.', messages: [
+            "hey. book. you know what to do.",
+            "things are calm. I like calm.",
+            "no rush. just vibes.",
+        ]},
+        reading: { icon: '📖', badge: '📖 present, barely', messages: [
+            "reading. don't make it weird.",
+            "shh, I'm supervising.",
+            "this is a nap with extra steps and I'm into it.",
+        ]},
+        sleepy: { icon: '💤', badge: '💤 unbothered', messages: [
+            "zzz. wake me for snacks or plot twists only.",
+            "resting. it's basically the same as reading.",
+            "no book, no problem. I'll just be here.",
+        ]},
+        hungry: { icon: '🫖', badge: '🫖 low effort, high standards', messages: [
+            "could read something. could also nap. your call.",
+            "shelf's empty. mildly inconvenient.",
+            "no pressure, but also. do something.",
+        ]},
+    },
+    golden: {
+        excited: { icon: '🏆', badge: '🏆 personal record incoming', messages: [
+            "FIVE STARS LET'S GOOO 🎉",
+            "okay that's a top 3 read, no debate",
+            "we are SO ahead of schedule right now",
+        ]},
+        cozy: { icon: '✨', badge: '✨ certified reading machine', messages: [
+            "look at you go! don't stop now!",
+            "streak's looking incredible, keep it up!!",
+            "you vs. your reading goal: you're winning",
+        ]},
+        happy: { icon: '💛', badge: '💛 main character behavior', messages: [
+            "let's find our next read, I'm feeling lucky!",
+            "your shelf is stacked, I'm so proud!",
+            "big things happening over here 💛",
+        ]},
+        reading: { icon: '⚡', badge: '⚡ in the zone', messages: [
+            "yes! locked in! don't stop!",
+            "this is what champions do. keep going.",
+            "one more chapter. you know you want to.",
+        ]},
+        sleepy: { icon: '😴', badge: '😴 recharging for round 2', messages: [
+            "resting up so we can crush the next one",
+            "quick nap, then back to the leaderboard",
+            "even champions need a break. briefly.",
+        ]},
+        hungry: { icon: '📣', badge: "📣 let's get a win on the board", messages: [
+            "empty shelf?? let's fix that immediately",
+            "first book of the streak, let's gooo",
+            "zero books is not the vibe. add one!",
+        ]},
     },
 };
 
-function getMood(books) {
-    if (books.length === 0) return MOODS.hungry;
+function getMoodKey(books) {
+    if (books.length === 0) return 'hungry';
     const thisYear = new Date().getFullYear();
     const read = books.filter(b => {
         if (b.status !== 'read') return false;
@@ -945,11 +1288,18 @@ function getMood(books) {
     const reading = books.filter(b => b.status === 'reading');
     const fiveStars = read.filter(b => b.rating === 5);
 
-    if (fiveStars.length > 0 && fiveStars.length === read.length && read.length > 0) return MOODS.excited;
-    if (read.length >= 5 && reading.length > 0) return MOODS.cozy;
-    if (reading.length > 0) return MOODS.reading;
-    if (read.length > 0) return MOODS.happy;
-    return MOODS.sleepy;
+    if (fiveStars.length > 0 && fiveStars.length === read.length && read.length > 0) return 'excited';
+    if (read.length >= 5 && reading.length > 0) return 'cozy';
+    if (reading.length > 0) return 'reading';
+    if (read.length > 0) return 'happy';
+    return 'sleepy';
+}
+
+function getMood(books, companion) {
+    const key = getMoodKey(books);
+    const set = COMPANION_MOODS[companion] || COMPANION_MOODS.cottage;
+    const data = set[key];
+    return { key, label: MOOD_LABELS[key], icon: data.icon, badge: data.badge, messages: data.messages };
 }
 
 function randomMessage(mood) {
@@ -958,10 +1308,23 @@ function randomMessage(mood) {
 }
 
 // ── Treats ──
-function renderTreats(read, fiveStars) {
+function renderTreats(read, fiveStars, companion) {
     const el = document.getElementById('treatItems');
-    const cupcakes = Math.min(read + fiveStars, 5);
-    el.textContent = cupcakes > 0 ? '🧁'.repeat(cupcakes) : '';
+    const count = Math.min(read + fiveStars, 5);
+    el.innerHTML = '';
+    if (count === 0) return;
+
+    for (let i = 0; i < count; i++) {
+        if (companion === 'lavender') {
+            el.insertAdjacentHTML('beforeend', '<span class="treat-mini"><div class="treat-mini-candle-flame"></div><div class="treat-mini-candle-body"></div></span>');
+        } else if (companion === 'sage') {
+            el.insertAdjacentHTML('beforeend', '<span class="treat-mini"><div class="treat-mini-mug-body"><div class="treat-mini-mug-handle"></div></div></span>');
+        } else if (companion === 'golden') {
+            el.insertAdjacentHTML('beforeend', '<span class="treat-mini"><div class="treat-mini-star"></div></span>');
+        } else {
+            el.insertAdjacentHTML('beforeend', '🧁');
+        }
+    }
 }
 
 // ── Now reading ──
@@ -998,9 +1361,55 @@ async function showNowReading(book) {
     }
 }
 
+// ── Room themes (Mochi Pro) ──
+const FREE_THEMES = ['cottage'];
+
+function applyRoomTheme(theme) {
+    document.getElementById('roomScene').dataset.theme = theme;
+}
+
+function renderThemePicker() {
+    const isPremium = window.mochiIsPremium();
+    const current = window.mochiGetRoomTheme();
+    applyRoomTheme(current);
+
+    document.querySelectorAll('.theme-swatch').forEach(btn => {
+        const theme = btn.dataset.theme;
+        const locked = !FREE_THEMES.includes(theme) && !isPremium;
+        btn.querySelector('.swatch-circle').classList.toggle('locked', locked);
+        btn.classList.toggle('active', theme === current);
+    });
+}
+
+document.getElementById('themeSwatches').addEventListener('click', async (e) => {
+    const btn = e.target.closest('.theme-swatch');
+    if (!btn) return;
+    const theme = btn.dataset.theme;
+    const isPremium = window.mochiIsPremium();
+
+    if (!FREE_THEMES.includes(theme) && !isPremium) {
+        if (confirm("Luna, Theo, and Sunny are Mochi Pro exclusive companions ✦\n\nWant to check out Mochi Pro?")) {
+            window.location.href = 'premium.html';
+        }
+        return;
+    }
+
+    applyRoomTheme(theme);
+    try {
+        await window.mochiSetRoomTheme(theme);
+    } catch (_) {}
+    init();
+});
+
+// ── Companion identity ──
+const COMPANION_NAMES = { cottage: 'Mochi', lavender: 'Luna', sage: 'Theo', golden: 'Sunny' };
+const COMPANION_TREAT_LABELS = { cottage: 'cupcakes earned 🧁', lavender: 'candles lit 🕯️', sage: 'cups of tea 🫖', golden: 'trophies won 🏆' };
+
 // ── Init ──
 function init() {
     const books = getBooks();
+    const companion = window.mochiGetRoomTheme();
+    const name = COMPANION_NAMES[companion] || 'Mochi';
     const thisYear = new Date().getFullYear();
     const read = books.filter(b => {
         if (b.status !== 'read') return false;
@@ -1009,7 +1418,7 @@ function init() {
     });
     const fiveStars = read.filter(b => b.rating === 5);
     const reading = books.filter(b => b.status === 'reading');
-    const mood = getMood(books);
+    const mood = getMood(books, companion);
 
     // Character mood
     document.getElementById('mochiCharacter').dataset.mood = mood.key;
@@ -1017,21 +1426,15 @@ function init() {
     // Speech bubble
     document.getElementById('speechBubble').textContent = randomMessage(mood);
 
-    // Subtitle
-    const subtitles = {
-        excited: "She's doing a little happy dance 🌟",
-        cozy: "Living her coziest life 🧁",
-        happy: "She's happy to see you 🌸",
-        reading: "Rooting for you, bestie 📖",
-        sleepy: "Shhh... she's napping 💤",
-        hungry: "She needs some books! 🧁",
-    };
-    document.getElementById('pageSubtitle').textContent = subtitles[mood.key];
+    // Heading + subtitle (companion voice)
+    document.getElementById('pageHeading').innerHTML = `${name}'s <em>little room.</em>`;
+    document.getElementById('pageSubtitle').textContent = mood.badge;
+    document.getElementById('moodCardLabel').textContent = `${name}'s mood`;
 
     // Stats
     document.getElementById('statRead').textContent = read.length;
     document.getElementById('statTreats').textContent = read.length + fiveStars.length;
-    document.getElementById('statTreatsSub').textContent = 'cupcakes earned 🧁';
+    document.getElementById('statTreatsSub').textContent = COMPANION_TREAT_LABELS[companion] || COMPANION_TREAT_LABELS.cottage;
     document.getElementById('statMoodLabel').textContent = mood.label;
     document.getElementById('statMoodBadge').textContent = mood.badge;
     document.getElementById('moodIcon').textContent = mood.icon;
@@ -1040,10 +1443,13 @@ function init() {
     populateShelves(books);
 
     // Treats on table
-    renderTreats(read.length, fiveStars.length);
+    renderTreats(read.length, fiveStars.length, companion);
 
     // Now reading
     showNowReading(reading[0] || null);
+
+    // Room theme
+    renderThemePicker();
 }
 
 window.initMochi(() => init());

@@ -140,6 +140,71 @@
         _user = data.user;
     };
 
+    // ── Mochi Pro (prototype — no real payment yet, just a flag) ──
+    window.mochiIsPremium = () => !!_user?.user_metadata?.is_premium;
+
+    window.mochiSetPremium = async (isPremium) => {
+        const { data, error } = await _sb.auth.updateUser({ data: { is_premium: isPremium } });
+        if (error) throw error;
+        _user = data.user;
+    };
+
+    window.mochiGetRoomTheme = () => _user?.user_metadata?.room_theme || 'cottage';
+
+    window.mochiSetRoomTheme = async (theme) => {
+        const { data, error } = await _sb.auth.updateUser({ data: { room_theme: theme } });
+        if (error) throw error;
+        _user = data.user;
+        try { localStorage.setItem('mochi-companion', theme); } catch (_) {}
+        _applyCompanionTheme(theme);
+    };
+
+    // ── Companion theme (site-wide palette) ─────────
+    const _COMPANION_PALETTES = {
+        lavender: {
+            '--pink-soft': '#241B2E', '--pink-light': '#4A3560', '--pink': '#8B6BB8', '--pink-deep': '#B497E8',
+            '--text': '#EDE4F5', '--text-muted': '#B49BC9', '--border': '#3D2E4D', '--surface': '#2A2035',
+            body: '#17111E',
+        },
+        sage: {
+            '--pink-soft': '#F1EDE3', '--pink-light': '#D9CBAE', '--pink': '#7A9B74', '--pink-deep': '#5E7D58',
+            '--text': '#3A3226', '--text-muted': '#8A7D68', '--border': '#E4D9C2', '--surface': '#FFFDF8',
+            body: '#FBF7EE',
+        },
+        golden: {
+            '--pink-soft': '#FFF3D6', '--pink-light': '#F0CE85', '--pink': '#E0A030', '--pink-deep': '#C2801A',
+            '--text': '#4A3018', '--text-muted': '#A0805A', '--border': '#F0DBA0', '--surface': '#FFFDF5',
+            body: '#FFF9EA',
+        },
+    };
+    const _COMPANION_ICONS = { cottage: '✦', lavender: '🌙', sage: '🍃', golden: '⭐' };
+
+    let _themeStyleEl = null;
+
+    function _applyCompanionTheme(companion) {
+        document.documentElement.dataset.companion = companion;
+
+        const palette = _COMPANION_PALETTES[companion];
+        if (!_themeStyleEl) {
+            _themeStyleEl = document.createElement('style');
+            document.head.appendChild(_themeStyleEl);
+        }
+        if (palette) {
+            const vars = Object.keys(palette).filter(k => k !== 'body').map(k => `${k}: ${palette[k]};`).join(' ');
+            _themeStyleEl.textContent = `
+                :root[data-companion="${companion}"] { ${vars} }
+                :root[data-companion="${companion}"] body { background: ${palette.body}; }
+            `;
+        } else {
+            _themeStyleEl.textContent = '';
+        }
+
+        const proLink = document.querySelector('nav a[href="premium.html"]');
+        if (proLink) {
+            proLink.textContent = proLink.textContent.replace(/^\S+/, _COMPANION_ICONS[companion] || '✦');
+        }
+    }
+
     // ── Styles ──────────────────────────────────────
     function _injectStyles() {
         const s = document.createElement('style');
@@ -388,6 +453,11 @@
     window.initMochi = async function (onReady) {
         _injectStyles();
 
+        try {
+            const cached = localStorage.getItem('mochi-companion');
+            if (cached) _applyCompanionTheme(cached);
+        } catch (_) {}
+
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/Mochi/sw.js', { scope: '/Mochi/' }).catch(() => {});
         }
@@ -406,6 +476,10 @@
         }
 
         _injectSignOut();
+
+        const realTheme = window.mochiGetRoomTheme();
+        _applyCompanionTheme(realTheme);
+        try { localStorage.setItem('mochi-companion', realTheme); } catch (_) {}
 
         try {
             await window.mochiLoadBooks();
