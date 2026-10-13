@@ -721,6 +721,55 @@
             top: 54px;
         }
 
+        /* ── Animated mood reactions ── */
+        @keyframes bunny-bounce-excited {
+            0%,100% { transform: translateY(0) scale(1); }
+            30% { transform: translateY(-11px) scale(1.04); }
+            55% { transform: translateY(-2px) scale(0.98); }
+            75% { transform: translateY(-7px) scale(1.02); }
+        }
+        @keyframes bunny-sway-cozy {
+            0%,100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-3px) rotate(1.5deg); }
+        }
+        @keyframes bunny-nod-sleepy {
+            0%,100%,40% { transform: translateY(0) rotate(0deg); }
+            48%,58% { transform: translateY(2px) rotate(-3deg); }
+        }
+        @keyframes bunny-sniff {
+            0%,100% { transform: translateY(0); }
+            25% { transform: translateY(-1px); }
+            50% { transform: translateY(1px); }
+            75% { transform: translateY(-1px); }
+        }
+        @keyframes ear-wiggle-left {
+            0%,100% { transform: rotate(-12deg); }
+            25% { transform: rotate(-22deg); }
+            70% { transform: rotate(-4deg); }
+        }
+        @keyframes ear-wiggle-right {
+            0%,100% { transform: rotate(12deg); }
+            25% { transform: rotate(22deg); }
+            70% { transform: rotate(4deg); }
+        }
+        @keyframes eye-blink-slow {
+            0%,85%,100% { height: 4px; }
+            92% { height: 1px; }
+        }
+        @keyframes nose-sniff {
+            0%,100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.3); }
+        }
+
+        .bunny[data-mood="excited"] { animation: bunny-bounce-excited 0.9s ease-in-out infinite; }
+        .bunny[data-mood="excited"] .ear-left { animation: ear-wiggle-left 0.6s ease-in-out infinite; }
+        .bunny[data-mood="excited"] .ear-right { animation: ear-wiggle-right 0.6s ease-in-out infinite; }
+        .bunny[data-mood="cozy"] { animation: bunny-sway-cozy 3.5s ease-in-out infinite; }
+        .bunny[data-mood="sleepy"] { animation: bunny-nod-sleepy 4s ease-in-out infinite; }
+        .bunny[data-mood="sleepy"] .eye { animation: eye-blink-slow 4s ease-in-out infinite; }
+        .bunny[data-mood="hungry"] { animation: bunny-sniff 1s ease-in-out infinite; }
+        .bunny[data-mood="hungry"] .nose { animation: nose-sniff 0.8s ease-in-out infinite; }
+
         /* ── Stats cards ── */
         .stats-grid {
             display: grid;
@@ -808,6 +857,67 @@
             color: var(--pink-deep);
             margin-top: 8px;
         }
+
+        /* ── Companion level (Mochi Pro) ── */
+        .level-card {
+            grid-column: 1 / -1;
+            text-align: left;
+            position: relative;
+        }
+        .level-card-head {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .level-lock { display: none; font-size: 0.9rem; }
+        .level-card.locked .level-lock { display: block; }
+        .level-card.locked { cursor: pointer; opacity: 0.85; }
+        .level-card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.05rem; font-weight: 700; color: var(--text);
+            margin-bottom: 10px;
+        }
+        .level-bar {
+            height: 10px; border-radius: 100px;
+            background: var(--pink-soft);
+            overflow: hidden;
+        }
+        .level-bar-fill {
+            height: 100%; border-radius: 100px;
+            background: linear-gradient(90deg, var(--pink), var(--gold, #E8C05A));
+            width: 0%;
+            transition: width 0.6s ease-out;
+        }
+        .level-card-sub {
+            font-size: 0.78rem; color: var(--text-muted); margin-top: 8px;
+        }
+
+        /* ── Level-up surprise toast ── */
+        .level-up-toast {
+            position: fixed; top: 24px; left: 50%;
+            transform: translate(-50%, -20px);
+            background: linear-gradient(135deg, #FCEBB8, #F5D580);
+            color: #4A3040;
+            padding: 18px 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 16px 40px rgba(201,154,46,0.35);
+            z-index: 999;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(.34,1.56,.64,1);
+            cursor: pointer;
+            max-width: 90vw;
+        }
+        .level-up-toast.show { opacity: 1; transform: translate(-50%, 0); }
+        .level-up-sparkles {
+            font-size: 1rem; letter-spacing: 5px; margin-bottom: 4px;
+            animation: sparkle-pulse 1s ease-in-out infinite;
+        }
+        @keyframes sparkle-pulse { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
+        .level-up-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem; font-weight: 700;
+        }
+        .level-up-sub { font-size: 0.85rem; margin-top: 3px; }
 
         /* ── Window foliage (CSS) ── */
         .window-foliage {
@@ -1053,6 +1163,16 @@
                 <div class="book-title" id="nowReadingTitle">—</div>
                 <div class="book-author" id="nowReadingAuthor">—</div>
             </div>
+        </div>
+
+        <div class="level-card stat-card" id="levelCard">
+            <div class="level-card-head">
+                <span class="stat-card-label" id="levelCardLabel">Companion level</span>
+                <span class="level-lock" id="levelLock">🔒</span>
+            </div>
+            <div class="level-card-title" id="levelTitle">—</div>
+            <div class="level-bar"><div class="level-bar-fill" id="levelBarFill"></div></div>
+            <div class="level-card-sub" id="levelSub">—</div>
         </div>
 
     </div>
@@ -1405,6 +1525,88 @@ document.getElementById('themeSwatches').addEventListener('click', async (e) => 
 const COMPANION_NAMES = { cottage: 'Mochi', lavender: 'Luna', sage: 'Theo', golden: 'Sunny' };
 const COMPANION_TREAT_LABELS = { cottage: 'cupcakes earned 🧁', lavender: 'candles lit 🕯️', sage: 'cups of tea 🫖', golden: 'trophies won 🏆' };
 
+// ── Companion levelling (Mochi Pro) ──
+const LEVEL_TIERS = [
+    { level: 1, title: 'New Friend', threshold: 0 },
+    { level: 2, title: 'Reading Buddy', threshold: 5 },
+    { level: 3, title: 'Close Companion', threshold: 15 },
+    { level: 4, title: 'Best Friend', threshold: 30 },
+    { level: 5, title: 'Soulmate', threshold: 50 },
+    { level: 6, title: 'Legend', threshold: 100 },
+];
+
+function getCompanionLevel(totalRead) {
+    let idx = 0;
+    for (let i = 0; i < LEVEL_TIERS.length; i++) {
+        if (totalRead >= LEVEL_TIERS[i].threshold) idx = i;
+    }
+    return { current: LEVEL_TIERS[idx], next: LEVEL_TIERS[idx + 1] || null, totalRead };
+}
+
+function showLevelUpSurprise(name, title, level) {
+    const el = document.createElement('div');
+    el.className = 'level-up-toast';
+    el.innerHTML = `
+        <div class="level-up-sparkles">✦ 🌸 ✦ 🌸 ✦</div>
+        <div class="level-up-title">Level ${level}!</div>
+        <div class="level-up-sub">${name} is now your <strong>${title}</strong></div>
+    `;
+    document.body.appendChild(el);
+    requestAnimationFrame(() => el.classList.add('show'));
+    const dismiss = () => { el.classList.remove('show'); setTimeout(() => el.remove(), 400); };
+    el.addEventListener('click', dismiss);
+    setTimeout(dismiss, 4000);
+}
+
+function checkLevelMilestone(companion, name, info) {
+    const key = `mochi-level-seen-${companion}`;
+    const stored = localStorage.getItem(key);
+    if (stored === null) {
+        localStorage.setItem(key, String(info.current.level));
+        return;
+    }
+    const seen = parseInt(stored, 10);
+    if (info.current.level > seen) {
+        localStorage.setItem(key, String(info.current.level));
+        showLevelUpSurprise(name, info.current.title, info.current.level);
+    }
+}
+
+function renderLevel(books, companion, name) {
+    const isPremium = window.mochiIsPremium();
+    const card = document.getElementById('levelCard');
+    const totalRead = books.filter(b => b.status === 'read').length;
+    const info = getCompanionLevel(totalRead);
+
+    if (!isPremium) {
+        card.classList.add('locked');
+        document.getElementById('levelCardLabel').textContent = 'Companion levelling';
+        document.getElementById('levelTitle').textContent = '✦ Mochi Pro';
+        document.getElementById('levelBarFill').style.width = '0%';
+        document.getElementById('levelSub').textContent = 'Unlock milestone surprises as you read';
+        card.onclick = () => { window.location.href = 'premium.html'; };
+        return;
+    }
+
+    card.classList.remove('locked');
+    card.onclick = null;
+    document.getElementById('levelCardLabel').textContent = `${name}'s level`;
+    document.getElementById('levelTitle').textContent = `Level ${info.current.level} — ${info.current.title}`;
+
+    if (info.next) {
+        const span = info.next.threshold - info.current.threshold;
+        const progress = Math.min(100, Math.round((totalRead - info.current.threshold) / span * 100));
+        document.getElementById('levelBarFill').style.width = `${progress}%`;
+        const remaining = info.next.threshold - totalRead;
+        document.getElementById('levelSub').textContent = `${remaining} more book${remaining === 1 ? '' : 's'} to Level ${info.next.level} — ${info.next.title}`;
+    } else {
+        document.getElementById('levelBarFill').style.width = '100%';
+        document.getElementById('levelSub').textContent = `Max level — ${name} is a true Legend ✦`;
+    }
+
+    checkLevelMilestone(companion, name, info);
+}
+
 // ── Init ──
 function init() {
     const books = getBooks();
@@ -1450,6 +1652,9 @@ function init() {
 
     // Room theme
     renderThemePicker();
+
+    // Companion level (Mochi Pro)
+    renderLevel(books, companion, name);
 }
 
 window.initMochi(() => init());
