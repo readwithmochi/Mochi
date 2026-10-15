@@ -189,19 +189,27 @@
             margin-top: 8px;
         }
 
+        /* A tiny shelf: one spine per book finished, taller = more pages */
         .book-dots {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 8px;
-            max-width: 360px;
+            align-items: flex-end;
+            gap: 4px;
+            max-width: 420px;
             margin: 0 auto;
+            padding-bottom: 6px;
+            border-bottom: 3px solid rgba(255,255,255,0.25);
         }
         .book-dot {
-            width: 28px; height: 28px;
-            border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 0.75rem;
+            width: 16px;
+            border-radius: 2px 3px 3px 2px;
+            box-shadow: inset -3px 0 0 rgba(0,0,0,0.12);
+        }
+        .book-dots-caption {
+            margin-top: 10px;
+            font-size: 0.72rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+            color: rgba(255,255,255,0.45);
         }
         .fun-fact {
             margin-top: 24px;
@@ -617,7 +625,7 @@
 
 <!-- Empty state -->
 <div class="empty-wrapped" id="emptyState">
-    <div style="font-size:3.5rem;margin-bottom:8px">🐰</div>
+    <div style="font-size:3.5rem;margin-bottom:8px" class="companion-emoji">🐰</div>
     <h2>Your Wrapped is empty!</h2>
     <p>Mark some books as Read on your shelf<br>to unlock your reading story.</p>
     <a href="shelf.html" class="btn-go-shelf">Go to my shelf →</a>
@@ -625,7 +633,7 @@
 
 <!-- Section 1: Hero -->
 <section class="wrapped-section s-hero" id="s1">
-    <div class="hero-bunny fade-up">🐰</div>
+    <div class="hero-bunny fade-up companion-emoji">🐰</div>
     <div class="hero-year fade-up delay-1" id="heroYear">2026</div>
     <h1 class="hero-title fade-up delay-2" id="heroTitle">
         Your<br><em>Reading Wrapped.</em>
@@ -651,7 +659,10 @@
             <div class="big-number-label">pages</div>
         </div>
     </div>
-    <div class="book-dots fade-up delay-3" id="bookDots"></div>
+    <div class="fade-up delay-3">
+        <div class="book-dots" id="bookDots"></div>
+        <div class="book-dots-caption">one spine for every book you finished</div>
+    </div>
     <p class="fun-fact fade-up delay-4" id="funFact"></p>
 </section>
 
@@ -706,7 +717,7 @@
 
 <!-- Section 8: Summary -->
 <section class="wrapped-section s-summary" id="s8">
-    <div class="summary-mochi fade-up">🐰</div>
+    <div class="summary-mochi fade-up companion-emoji">🐰</div>
     <h2 class="summary-thanks fade-up delay-1">What a year, bestie.</h2>
     <p class="summary-sub fade-up delay-2">Here's everything you lived through in books.</p>
 
@@ -936,6 +947,27 @@ function getPersonality(tagCounts, books) {
     };
 }
 
+// Books added from Discover used to be saved without a page count, so Wrapped showed no pages.
+// Look those up once (this year's finished books only), save them to the book, give up after 6s.
+async function fillMissingPages(books) {
+    const year = new Date().getFullYear();
+    const missing = books.filter(b => b.status === 'read' && !b.pageCount && b.dateFinished &&
+        new Date(b.dateFinished).getFullYear() === year);
+    if (!missing.length) return;
+    const lookups = missing.map(async b => {
+        try {
+            const res = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(b.title)}&author=${encodeURIComponent(b.author)}&limit=1&fields=number_of_pages_median`,
+                { signal: AbortSignal.timeout?.(6000) });
+            const pages = (await res.json()).docs?.[0]?.number_of_pages_median;
+            if (pages > 0) {
+                b.pageCount = pages;
+                window.mochiUpdateBook(b);
+            }
+        } catch (_) {}
+    });
+    await Promise.race([Promise.all(lookups), new Promise(r => setTimeout(r, 6000))]);
+}
+
 // Every outcome is celebrated — free users and missed goals are never shamed
 function getGoalResult(books, target) {
     if (!target) return null;
@@ -987,14 +1019,15 @@ async function render(data) {
     }
     document.getElementById('funFact').textContent = funFact;
 
-    // Book dots
+    // Book spines
     const dotsEl = document.getElementById('bookDots');
-    readThisYear.forEach((_, i) => {
-        const dot = document.createElement('div');
-        dot.className = 'book-dot';
-        dot.style.cssText = `background:${DOT_COLORS[i % DOT_COLORS.length]};`;
-        dot.title = readThisYear[i].title;
-        dotsEl.appendChild(dot);
+    readThisYear.forEach((book, i) => {
+        const spine = document.createElement('div');
+        spine.className = 'book-dot';
+        const h = book.pageCount ? Math.min(Math.max(34 + book.pageCount / 18, 36), 70) : 48;
+        spine.style.cssText = `background:${DOT_COLORS[i % DOT_COLORS.length]};height:${Math.round(h)}px;`;
+        spine.title = book.title;
+        dotsEl.appendChild(spine);
     });
 
     // Section 2b: Reading goal
@@ -1178,7 +1211,7 @@ const CARD_THEMES = {
         text: '#4A3040', muted: '#9B7B8A', accent: '#C97A8E', panel: 'rgba(255,255,255,0.65)', divider: 'rgba(201,122,142,0.2)',
     },
     lavender: {
-        name: 'Luna', emoji: '🐱', line: 'villain arc: complete.',
+        name: 'Luna', emoji: '🐈‍⬛', line: 'villain arc: complete.',
         bg: ['#17111E', '#241B2E', '#4A3560'],
         text: '#EDE4F5', muted: '#B49BC9', accent: '#B497E8', panel: 'rgba(255,255,255,0.07)', divider: 'rgba(180,151,232,0.2)',
     },
@@ -1302,7 +1335,13 @@ async function drawWrappedCard(data, themeKey, nickname, scale) {
 
     // Big numbers
     const stats = [{ val: data.totalBooks, label: 'BOOKS' }];
-    if (data.totalPages > 0) stats.push({ val: data.totalPages, label: 'PAGES' });
+    if (data.totalPages > 0) {
+        stats.push({ val: data.totalPages, label: 'PAGES' });
+    } else {
+        // No page counts known — show authors so the panel never looks half-empty
+        const authors = new Set(data.readThisYear.map(b => b.author)).size;
+        stats.push({ val: authors, label: authors === 1 ? 'AUTHOR' : 'AUTHORS' });
+    }
     roundRect(ctx, PAD, 480, INNER, 270, 36);
     ctx.fillStyle = t.panel; ctx.fill();
     stats.forEach((s, i) => {
@@ -1325,11 +1364,11 @@ async function drawWrappedCard(data, themeKey, nickname, scale) {
     ctx.fillText(data.hasAllFiveStars ? '5-STAR READS' : 'TOP READS', CARD_W / 2, 830);
     setSpacing(ctx, 0);
 
-    const CW = 240, CH = 360, GAP = 50;
+    const CW = 220, CH = 330, GAP = 50;
     const n = data.topRated.length;
     const startX = (CARD_W - (n * CW + (n - 1) * GAP)) / 2;
     data.topRated.forEach((book, i) => {
-        const x = startX + i * (CW + GAP), y = 870;
+        const x = startX + i * (CW + GAP), y = 860;
         ctx.save();
         ctx.shadowColor = 'rgba(0,0,0,0.22)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12;
         roundRect(ctx, x, y, CW, CH, 16);
@@ -1357,7 +1396,7 @@ async function drawWrappedCard(data, themeKey, nickname, scale) {
 
         ctx.fillStyle = t.accent;
         ctx.font = sans(800, 30);
-        ctx.fillText('★'.repeat(book.rating || 0), x + CW / 2, y + CH + 50);
+        ctx.fillText('★'.repeat(book.rating || 0), x + CW / 2, y + CH + 46);
     });
 
     // Highlights
@@ -1369,7 +1408,7 @@ async function drawWrappedCard(data, themeKey, nickname, scale) {
     if (data.vibe.word !== data.personality.type && rows.length < 4) rows.push(['Top vibe', data.vibe.word]);
     rows.push(['Reader type', data.personality.type]);
 
-    const ROW_H = 84, panelY = 1340;
+    const ROW_H = 84, panelY = 1290;
     roundRect(ctx, PAD, panelY, INNER, rows.length * ROW_H + 30, 36);
     ctx.fillStyle = t.panel; ctx.fill();
     rows.forEach(([label, value], i) => {
@@ -1388,15 +1427,59 @@ async function drawWrappedCard(data, themeKey, nickname, scale) {
         }
     });
 
-    // Companion sign-off + footer
-    ctx.textAlign = 'center';
-    ctx.fillStyle = t.text;
+    // Companion speech bubble, sitting right under the highlights
+    const panelBottom = panelY + rows.length * ROW_H + 30;
+    const quote = `“${t.line}”`;
     ctx.font = serif(400, 40, 'italic ');
-    ctx.fillText(`${t.emoji} ${t.name}: “${t.line}”`, CARD_W / 2, 1790);
+    const quoteW = Math.min(ctx.measureText(quote).width, INNER - 200);
+    ctx.font = sans(800, 22);
+    setSpacing(ctx, 3);
+    const label = `${t.name.toUpperCase()} SAYS`;
+    const labelW = ctx.measureText(label).width;
+    setSpacing(ctx, 0);
+    const EMOJI_BOX = 96, BPAD = 34;
+    const bw = Math.min(BPAD + EMOJI_BOX + 26 + Math.max(quoteW, labelW) + BPAD, INNER);
+    const bh = 124;
+    const bx = (CARD_W - bw) / 2;
+    // centred in the space between the highlights and the footer
+    const by = Math.max(panelBottom + 40, panelBottom + (1830 - panelBottom - bh) / 2);
+    // tail pointing up at the highlights panel
+    ctx.fillStyle = t.panel;
+    ctx.beginPath();
+    ctx.moveTo(CARD_W / 2 - 18, by + 1);
+    ctx.lineTo(CARD_W / 2, by - 18);
+    ctx.lineTo(CARD_W / 2 + 18, by + 1);
+    ctx.closePath();
+    ctx.fill();
+    roundRect(ctx, bx, by, bw, bh, 40);
+    ctx.fill();
+    // companion emoji in a light circle (so Luna's black cat shows up too)
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.beginPath();
+    ctx.arc(bx + BPAD + EMOJI_BOX / 2, by + bh / 2, EMOJI_BOX / 2 - 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#000'; // opaque, otherwise the emoji inherits the circle's transparency
+    ctx.textAlign = 'center';
+    ctx.font = sans(400, 50);
+    ctx.fillText(t.emoji, bx + BPAD + EMOJI_BOX / 2, by + bh / 2 + 18);
+    // name + quote
+    const tx = bx + BPAD + EMOJI_BOX + 26;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = t.accent;
+    ctx.font = sans(800, 22);
+    setSpacing(ctx, 3);
+    ctx.fillText(label, tx, by + 48);
+    setSpacing(ctx, 0);
+    ctx.fillStyle = t.text;
+    fitFont(ctx, quote, quoteW, 40, s => serif(400, s, 'italic '));
+    ctx.fillText(quote, tx, by + 94);
+
+    // Footer
+    ctx.textAlign = 'center';
     ctx.fillStyle = t.muted;
     ctx.font = sans(700, 26);
     setSpacing(ctx, 2);
-    ctx.fillText('readwithmochi.github.io/Mochi', CARD_W / 2, 1860);
+    ctx.fillText('readwithmochi.github.io/Mochi', CARD_W / 2, 1868);
     setSpacing(ctx, 0);
 
     return canvas;
@@ -1540,7 +1623,10 @@ function setupScrollObserver(sectionIds) {
 // ──────────────────────────────────────────
 // Init
 // ──────────────────────────────────────────
-function init() {
+async function init() {
+    const companion = window.mochiGetCompanion();
+    document.querySelectorAll('.companion-emoji').forEach(el => { el.textContent = companion.emoji; });
+
     const user = window.mochiGetUser();
     const nickname = user?.user_metadata?.nickname || (user?.email ? user.email.split('@')[0] : null);
     if (nickname) {
@@ -1554,6 +1640,7 @@ function init() {
     }
 
     const books = getBooks();
+    await fillMissingPages(books);
     const data = computeWrapped(books);
 
     if (!data) {

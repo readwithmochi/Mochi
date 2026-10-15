@@ -360,9 +360,9 @@
 <div id="scrollSentinel"></div>
 
 <div class="pet-corner">
-    <span class="pet-emoji">🐰</span>
+    <span class="pet-emoji" id="petEmoji">🐰</span>
     <div class="pet-message">
-        <strong>Mochi says...</strong>
+        <strong id="petName">Mochi says...</strong>
         <span id="petMsg">Find something good!</span>
     </div>
 </div>
@@ -879,18 +879,66 @@ const FALLBACK_COLORS = [
     'linear-gradient(145deg,#880E4F,#560027)',
 ];
 
+// What the pet corner says per tab — every companion in their own voice
 const PET_MSGS = {
-    foryou:       'Picked just for you based on what you love 💕',
-    booktok:      'These are all over TikTok rn 🔥',
-    romance:      'Your heart is going to go through it 💕',
-    dark_romance: 'Morally grey love interests incoming 🖤',
-    thriller:     'No spoilers! Sleep is optional 🔪',
-    fantasy:      'Whole new worlds await ✨',
-    contemporary: 'These will feel like a warm hug 🌸',
-    ya:           'Okay these ones make me cry 🎒',
-    mystery:      'Can you solve it before the end? 🕵️',
-    scifi:        'To infinity and beyond 🚀',
+    cottage: {
+        foryou:       'Picked just for you based on what you love 💕',
+        booktok:      'These are all over TikTok rn 🔥',
+        romance:      'Your heart is going to go through it 💕',
+        dark_romance: 'Morally grey love interests incoming 🖤',
+        thriller:     'No spoilers! Sleep is optional 🔪',
+        fantasy:      'Whole new worlds await ✨',
+        contemporary: 'These will feel like a warm hug 🌸',
+        ya:           'Okay these ones make me cry 🎒',
+        mystery:      'Can you solve it before the end? 🕵️',
+        scifi:        'To infinity and beyond 🚀',
+        default:      'Find something good!',
+        search:       q => `Searching for "${q}" 🔍`,
+    },
+    lavender: {
+        foryou:       "picked these myself. you're welcome 🖤",
+        booktok:      'everyone is reading these. fine. some are good.',
+        romance:      "love stories. groundbreaking. I'll allow it.",
+        dark_romance: 'now THIS is my aisle 🖤',
+        thriller:     'trust no one. especially the narrator 🔪',
+        fantasy:      'morally grey fae? say less.',
+        contemporary: 'feelings. ugh. okay, these are good.',
+        ya:           'teen angst. I was born for this.',
+        mystery:      'I already know who did it 🕯️',
+        scifi:        'space is just a big dark library.',
+        default:      'find something dangerous.',
+        search:       q => `hunting down "${q}"...`,
+    },
+    sage: {
+        foryou:       'found some for you. no rush.',
+        booktok:      'popular ones. people seem to like them.',
+        romance:      'nice ones. bring tea 🍵',
+        dark_romance: 'bit intense. you do you.',
+        thriller:     'lock the door first.',
+        fantasy:      'long books. good for hibernating 🍂',
+        contemporary: 'cozy feelings. good.',
+        ya:           'classics. nice.',
+        mystery:      'a puzzle. take your time.',
+        scifi:        'space. very quiet. nice.',
+        default:      'hey. book. you know what to do.',
+        search:       q => `looking for "${q}". hang on.`,
+    },
+    golden: {
+        foryou:       "HAND-PICKED FOR YOU LET'S GOOO ⭐",
+        booktok:      'THE HITS. ALL OF THEM 🔥',
+        romance:      "kissing books!! I'm screaming 💛",
+        dark_romance: 'OKAY BOLD CHOICE I LOVE IT',
+        thriller:     'PLOT TWISTS INCOMING 😱',
+        fantasy:      "DRAGONS?? WE'RE SO BACK",
+        contemporary: 'these are gonna hit SO hard 🌟',
+        ya:           'nostalgia speedrun ⭐',
+        mystery:      'I bet you solve it first 🏆',
+        scifi:        'TO SPACE!! 🚀',
+        default:      'pick one! pick one! ⭐',
+        search:       q => `FINDING "${q}" FOR YOU 🏃`,
+    },
 };
+const petMsgs = () => PET_MSGS[window.mochiGetCompanion().key] || PET_MSGS.cottage;
 
 // ──────────────────────────────────────────
 // Shelf helpers
@@ -902,14 +950,14 @@ function isOnShelf(title, author) {
     );
 }
 
-function addToShelf(title, author, coverId, status) {
+function addToShelf(title, author, coverId, status, pageCount = null) {
     if (isOnShelf(title, author)) return;
     const fallback = FALLBACK_COLORS[Math.floor(Math.random() * FALLBACK_COLORS.length)];
     const newBook = {
         id: 'book_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
         title, author, status,
         rating: null, tags: [], notes: '', favourite: false,
-        coverId: coverId || null, pageCount: null,
+        coverId: coverId || null, pageCount: pageCount || null,
         fallbackColor: fallback, dateAdded: Date.now(),
         dateFinished: status === 'read' ? Date.now() : null,
     };
@@ -994,13 +1042,14 @@ async function fetchSearch(query, page = 1) {
     const q = encodeURIComponent(query);
     const offset = (page - 1) * 20;
     const res = await fetch(
-        `https://openlibrary.org/search.json?q=${q}&limit=20&offset=${offset}&fields=title,author_name,cover_i,subject,key`
+        `https://openlibrary.org/search.json?q=${q}&limit=20&offset=${offset}&fields=title,author_name,cover_i,subject,key,number_of_pages_median`
     );
     const data = await res.json();
     const books = (data.docs || []).map(d => ({
         title: d.title,
         author: (d.author_name || ['Unknown'])[0],
         coverId: d.cover_i || null,
+        pageCount: d.number_of_pages_median || null,
         blurb: '', // filled lazily from the book's real description
         genres: genresFor(d.title, d.subject || []),
         key: d.key || '',
@@ -1028,13 +1077,13 @@ async function lookupCuratedBook(title, author) {
     try {
         // Searching title + author separately matches the right book far more often than one free-text query
         // Give up after 8s so the card shows its coloured fallback instead of loading forever
-        const res = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}&limit=3&fields=cover_i,key`,
+        const res = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}&limit=3&fields=cover_i,key,number_of_pages_median`,
             { signal: AbortSignal.timeout?.(8000) });
         const data = await res.json();
         const docs = data.docs || [];
         const doc = docs.find(d => d.cover_i) || docs[0];
         if (!doc) return null;
-        return { coverId: doc.cover_i || null, key: doc.key || '' };
+        return { coverId: doc.cover_i || null, key: doc.key || '', pageCount: doc.number_of_pages_median || null };
     } catch (_) {
         return null;
     }
@@ -1176,6 +1225,7 @@ function createCard(book, onShelf, colorIdx) {
             if (!info) { loader.remove(); fallbackEl.style.display = 'flex'; return; }
             book.coverId = info.coverId;
             book.key = info.key;
+            book.pageCount = info.pageCount;
             if (info.coverId) {
                 img.src = `https://covers.openlibrary.org/b/id/${info.coverId}-M.jpg`;
                 img.onload = () => { loader.remove(); img.style.display = 'block'; };
@@ -1206,7 +1256,7 @@ function createCard(book, onShelf, colorIdx) {
     picker.querySelectorAll('.btn-status').forEach(btn => {
         btn.addEventListener('click', e => {
             e.stopPropagation();
-            addToShelf(book.title, book.author, book.coverId, btn.dataset.status);
+            addToShelf(book.title, book.author, book.coverId, btn.dataset.status, book.pageCount);
             const wrap = card.querySelector('.add-wrap');
             wrap.innerHTML = `<div class="btn-on-shelf">✓ On your shelf</div>`;
             const coverWrap = card.querySelector('.disc-cover-wrap');
@@ -1299,7 +1349,8 @@ function appendEndMessage() {
     const grid = document.getElementById('discoverGrid');
     const end = document.createElement('div');
     end.className = 'grid-message';
-    end.innerHTML = `<span class="msg-emoji">🐰</span><p>That's every book Mochi picked for this list ✨<br>Looking for something else? Use the search above!</p>`;
+    const companion = window.mochiGetCompanion();
+    end.innerHTML = `<span class="msg-emoji">${companion.emoji}</span><p>That's every book ${companion.name} picked for this list ✨<br>Looking for something else? Use the search above!</p>`;
     grid.appendChild(end);
 }
 
@@ -1320,7 +1371,7 @@ async function switchCategory(key) {
     hasMore = true;
 
     document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.toggle('active', btn.dataset.key === key));
-    document.getElementById('petMsg').textContent = PET_MSGS[key] || 'Find something good!';
+    document.getElementById('petMsg').textContent = petMsgs()[key] || petMsgs().default;
 
     await loadPage(key, 1, true);
 }
@@ -1329,6 +1380,10 @@ async function switchCategory(key) {
 // Init
 // ──────────────────────────────────────────
 function init() {
+    const companion = window.mochiGetCompanion();
+    document.getElementById('petEmoji').textContent = companion.emoji;
+    document.getElementById('petName').textContent = `${companion.name} says...`;
+
     const catsEl = document.getElementById('categories');
     CATEGORIES.forEach(cat => {
         const btn = document.createElement('button');
@@ -1355,7 +1410,7 @@ function init() {
         }
         searchDebounce = setTimeout(() => {
             searchQuery = q;
-            document.getElementById('petMsg').textContent = `Searching for "${q}" 🔍`;
+            document.getElementById('petMsg').textContent = petMsgs().search(q);
             document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
             activeKey = '__search__';
             currentPage = 1;
@@ -1425,7 +1480,7 @@ function openBookModal(book) {
         `;
         actionsEl.querySelectorAll('.modal-status-btn').forEach(btn => {
             btn.addEventListener('click', () => {
-                addToShelf(book.title, book.author, book.coverId, btn.dataset.status);
+                addToShelf(book.title, book.author, book.coverId, btn.dataset.status, book.pageCount);
                 actionsEl.innerHTML = `<div class="modal-btn-on-shelf">✓ Added to your shelf</div>`;
             });
         });

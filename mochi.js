@@ -188,6 +188,18 @@
     };
     const _COMPANION_ICONS = { cottage: '✦', lavender: '🌙', sage: '🍃', golden: '⭐' };
 
+    // Who's keeping the user company — pages use this for the pet corner, Wrapped, etc.
+    const _COMPANIONS = {
+        cottage:  { name: 'Mochi', emoji: '🐰' },
+        lavender: { name: 'Luna',  emoji: '🐈‍⬛' },
+        sage:     { name: 'Theo',  emoji: '🐻' },
+        golden:   { name: 'Sunny', emoji: '🦊' },
+    };
+    window.mochiGetCompanion = () => {
+        const key = _COMPANIONS[window.mochiGetRoomTheme()] ? window.mochiGetRoomTheme() : 'cottage';
+        return { key, ..._COMPANIONS[key] };
+    };
+
     let _themeStyleEl = null;
 
     function _applyCompanionTheme(companion) {

@@ -670,7 +670,7 @@
 <section class="shelf" id="shelf"></section>
 
 <div class="pet-corner">
-    <span class="pet-emoji">🐰</span>
+    <span class="pet-emoji" id="petEmoji">🐰</span>
     <div class="pet-message" id="petMessage">
         <strong>Mochi says...</strong>
         Loading...
@@ -885,23 +885,42 @@ function renderFilters(books) {
     });
 }
 
+// Pet corner lines per companion: [before title, after title] while reading, then many-read / empty / default
+const SHELF_PET_MSGS = {
+    cottage:  { reading: ["How's ", ' going? 📖'], many: n => `${n} books read — you're amazing! 🌸`,
+                empty: 'Add your first book! ✨', other: 'Keep reading, bestie! 🐰' },
+    lavender: { reading: ['how is ', '? has anyone been betrayed yet'], many: n => `${n} books. a menace. respect 🖤`,
+                empty: 'an empty shelf. how tragic. fix it.', other: 'keep going. the villains need you.' },
+    sage:     { reading: ["how's ", '? take your time.'], many: n => `${n} books. nice. 🍵`,
+                empty: "no books yet. that's okay. add one.", other: 'hey. book. you know what to do.' },
+    golden:   { reading: ["HOW'S ", ' GOING?? ⭐'], many: n => `${n} BOOKS!! YOU'RE UNSTOPPABLE 🏆`,
+                empty: "FIRST BOOK TIME, LET'S GO ✨", other: 'KEEP READING CHAMP ⭐' },
+};
+
 function updatePetMessage(books) {
     const reading = books.filter(b => b.status === 'reading');
     const read = books.filter(b => b.status === 'read');
+    const companion = window.mochiGetCompanion();
+    const msgs = SHELF_PET_MSGS[companion.key] || SHELF_PET_MSGS.cottage;
+    document.getElementById('petEmoji').textContent = companion.emoji;
     const msgEl = document.getElementById('petMessage');
-    msgEl.innerHTML = '<strong>Mochi says...</strong> ';
+    msgEl.innerHTML = '';
+    const name = document.createElement('strong');
+    name.textContent = `${companion.name} says...`;
+    msgEl.appendChild(name);
+    msgEl.appendChild(document.createTextNode(' '));
     if (reading.length > 0) {
-        msgEl.appendChild(document.createTextNode("How's "));
+        msgEl.appendChild(document.createTextNode(msgs.reading[0]));
         const em = document.createElement('em');
         em.textContent = reading[0].title;
         msgEl.appendChild(em);
-        msgEl.appendChild(document.createTextNode(' going? 📖'));
+        msgEl.appendChild(document.createTextNode(msgs.reading[1]));
     } else if (read.length >= 5) {
-        msgEl.appendChild(document.createTextNode(`${read.length} books read — you're amazing! 🌸`));
+        msgEl.appendChild(document.createTextNode(msgs.many(read.length)));
     } else if (books.length === 0) {
-        msgEl.appendChild(document.createTextNode('Add your first book! ✨'));
+        msgEl.appendChild(document.createTextNode(msgs.empty));
     } else {
-        msgEl.appendChild(document.createTextNode('Keep reading, bestie! 🐰'));
+        msgEl.appendChild(document.createTextNode(msgs.other));
     }
 }
 
