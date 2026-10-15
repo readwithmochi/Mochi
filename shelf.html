@@ -902,7 +902,7 @@ function updatePetMessage(books) {
     const read = books.filter(b => b.status === 'read');
     const companion = window.mochiGetCompanion();
     const msgs = SHELF_PET_MSGS[companion.key] || SHELF_PET_MSGS.cottage;
-    document.getElementById('petEmoji').textContent = companion.emoji;
+    window.mochiMiniPet(document.getElementById('petEmoji'));
     const msgEl = document.getElementById('petMessage');
     msgEl.innerHTML = '';
     const name = document.createElement('strong');

@@ -1381,7 +1381,7 @@ async function switchCategory(key) {
 // ──────────────────────────────────────────
 function init() {
     const companion = window.mochiGetCompanion();
-    document.getElementById('petEmoji').textContent = companion.emoji;
+    window.mochiMiniPet(document.getElementById('petEmoji'));
     document.getElementById('petName').textContent = `${companion.name} says...`;
 
     const catsEl = document.getElementById('categories');

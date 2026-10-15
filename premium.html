@@ -149,6 +149,7 @@
             font-size: 0.8rem;
             color: var(--text-muted);
         }
+        .downgrade-note a { color: var(--pink-deep); font-weight: 700; }
         .downgrade-note button {
             background: none; border: none; color: var(--pink-deep);
             font-weight: 700; cursor: pointer; text-decoration: underline;
@@ -400,7 +401,11 @@
         Changed your mind? <button id="downgradeBtn">Turn off Mochi Pro</button>
     </div>
 
-    <div class="prototype-note">
+    <div class="downgrade-note" id="manageNote" style="display:none">
+        Need to change or cancel your plan? <a id="manageLink" href="#" target="_blank" rel="noopener">Manage subscription</a>
+    </div>
+
+    <div class="prototype-note" id="prototypeNote">
         🔧 Prototype note: this page shows where Mochi Pro is headed. Today, clicking "Upgrade" instantly unlocks the part that's actually built — switching to Luna, Theo or Sunny with their own room and dialogue. Levelling, seasonal themes, photo uploads, detailed stats, Wrapped export and PDF export are on the roadmap, not live yet. No real payment is connected either — this is just testing the concept.
     </div>
 
@@ -411,14 +416,22 @@
 <script>
 function refreshStatus() {
     const isPremium = window.mochiIsPremium();
+    const live = window.mochiPaymentsLive();
     const banner = document.getElementById('statusBanner');
     const downgradeNote = document.getElementById('downgradeNote');
+    const manageNote = document.getElementById('manageNote');
     const upgradeBtns = document.querySelectorAll('.upgrade-btn');
+
+    // Real payments: no free test switch, no prototype disclaimer
+    document.getElementById('prototypeNote').style.display = live ? 'none' : '';
+    const manageUrl = window.mochiManageSubscriptionUrl();
+    manageNote.style.display = live && isPremium && manageUrl ? 'block' : 'none';
+    if (manageUrl) document.getElementById('manageLink').href = manageUrl;
 
     if (isPremium) {
         banner.textContent = "✦ You're a Mochi Pro member! Go pick a new room theme on My Pet 🎨";
         banner.classList.add('show');
-        downgradeNote.style.display = 'block';
+        downgradeNote.style.display = live ? 'none' : 'block';
         upgradeBtns.forEach(btn => { btn.disabled = true; btn.textContent = "You're already Pro ✦"; });
     } else {
         banner.classList.remove('show');
@@ -430,7 +443,12 @@ function refreshStatus() {
 document.querySelectorAll('.upgrade-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
         btn.disabled = true;
-        btn.textContent = 'Upgrading...';
+        btn.textContent = live() ? 'Opening checkout...' : 'Upgrading...';
+        if (live()) {
+            // Stripe's hosted checkout; it comes back to premium.html?checkout=success
+            window.location.href = window.mochiCheckoutUrl(btn.dataset.plan);
+            return;
+        }
         try {
             await window.mochiSetPremium(true);
             refreshStatus();
@@ -441,13 +459,36 @@ document.querySelectorAll('.upgrade-btn').forEach(btn => {
     });
 });
 
+function live() { return window.mochiPaymentsLive(); }
+
+// Back from Stripe: the webhook needs a few seconds to switch Pro on, so check again a few times
+async function waitForPro() {
+    const banner = document.getElementById('statusBanner');
+    banner.textContent = 'Payment received! Unlocking Mochi Pro... ✨';
+    banner.classList.add('show');
+    for (let i = 0; i < 15 && !window.mochiIsPremium(); i++) {
+        await new Promise(r => setTimeout(r, 2000));
+        await window.mochiRefreshUser();
+    }
+    if (window.mochiIsPremium()) {
+        history.replaceState(null, '', 'premium.html');
+        refreshStatus();
+        banner.textContent = '🎉 Welcome to Mochi Pro! Go meet Luna, Theo and Sunny on My Pet.';
+    } else {
+        banner.textContent = "Payment received, but Pro isn't on yet. Refresh in a minute — if it's still off, email us and we'll fix it right away.";
+    }
+}
+
 document.getElementById('downgradeBtn').addEventListener('click', async () => {
     if (!confirm("Turn off Mochi Pro on this account? (This is just for testing the prototype.)")) return;
     await window.mochiSetPremium(false);
     refreshStatus();
 });
 
-window.initMochi(() => refreshStatus());
+window.initMochi(() => {
+    refreshStatus();
+    if (new URLSearchParams(location.search).get('checkout') === 'success') waitForPro();
+});
 </script>
 
 </body>

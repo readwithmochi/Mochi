@@ -140,8 +140,30 @@
         _user = data.user;
     };
 
-    // ── Mochi Pro (prototype — no real payment yet, just a flag) ──
-    window.mochiIsPremium = () => !!_user?.user_metadata?.is_premium;
+    // ── Stripe ── paste your Payment Links here once they exist in Stripe (guide: Desktop\Mochi\Stripe_Setup.md)
+    // While these are empty, Pro stays in prototype mode (free test switch on premium.html).
+    const _STRIPE = {
+        monthly: '',   // e.g. 'https://buy.stripe.com/abc123'
+        yearly: '',
+        portal: '',    // Customer portal link, so people can cancel themselves
+    };
+    const _PAYMENTS_LIVE = !!(_STRIPE.monthly && _STRIPE.yearly);
+    window.mochiPaymentsLive = () => _PAYMENTS_LIVE;
+    window.mochiCheckoutUrl = (plan) =>
+        `${_STRIPE[plan]}?client_reference_id=${encodeURIComponent(_user.id)}&prefilled_email=${encodeURIComponent(_user.email)}`;
+    window.mochiManageSubscriptionUrl = () =>
+        _STRIPE.portal ? `${_STRIPE.portal}?prefilled_email=${encodeURIComponent(_user.email)}` : null;
+    window.mochiRefreshUser = async () => {
+        const { data } = await _sb.auth.getUser();
+        if (data?.user) _user = data.user;
+        return _user;
+    };
+
+    // ── Mochi Pro ──
+    // Real Pro lives in app_metadata, which only the Stripe webhook (server) can write.
+    // user_metadata can be edited by anyone from the browser, so it only counts while payments aren't live (prototype).
+    window.mochiIsPremium = () =>
+        !!_user?.app_metadata?.is_premium || (!_PAYMENTS_LIVE && !!_user?.user_metadata?.is_premium);
 
     window.mochiSetPremium = async (isPremium) => {
         const { data, error } = await _sb.auth.updateUser({ data: { is_premium: isPremium } });
@@ -149,7 +171,8 @@
         _user = data.user;
     };
 
-    window.mochiGetRoomTheme = () => _user?.user_metadata?.room_theme || 'cottage';
+    // Luna/Theo/Sunny are Pro — if Pro ends, everyone goes back to Mochi
+    window.mochiGetRoomTheme = () => window.mochiIsPremium() ? (_user?.user_metadata?.room_theme || 'cottage') : 'cottage';
 
     window.mochiSetRoomTheme = async (theme) => {
         const { data, error } = await _sb.auth.updateUser({ data: { room_theme: theme } });
@@ -198,6 +221,19 @@
     window.mochiGetCompanion = () => {
         const key = _COMPANIONS[window.mochiGetRoomTheme()] ? window.mochiGetRoomTheme() : 'cottage';
         return { key, ..._COMPANIONS[key] };
+    };
+
+    // A tiny version of the hand-drawn companion from pet.html (pure CSS, no emoji) — put it in any element
+    window.mochiMiniPet = (el) => {
+        if (!el) return;
+        el.classList.add('mini-pet');
+        el.dataset.pet = window.mochiGetCompanion().key;
+        el.innerHTML = `
+            <div class="mp-scale">
+                <div class="mp-ears"><div class="mp-ear mp-ear-l"><div class="mp-ear-in"></div></div><div class="mp-ear mp-ear-r"><div class="mp-ear-in"></div></div></div>
+                <div class="mp-head"><div class="mp-eye mp-eye-l"></div><div class="mp-eye mp-eye-r"></div><div class="mp-cheek mp-cheek-l"></div><div class="mp-cheek mp-cheek-r"></div><div class="mp-nose"></div><div class="mp-mouth"></div></div>
+                <div class="mp-body"><div class="mp-tummy"></div></div>
+            </div>`;
     };
 
     let _themeStyleEl = null;
@@ -303,6 +339,49 @@
                 font-family: 'Nunito', sans-serif; transition: all 0.2s;
             }
             .mochi-signout-btn:hover { background: #FAE8EF; color: #C97A8E; }
+
+            /* ── Mini companion (same drawing as pet.html, scaled down) ── */
+            .mini-pet { display: inline-block; font-size: 0; position: relative; width: 36px; height: 62px; flex-shrink: 0; animation: mp-breathe 3.5s ease-in-out infinite; }
+            @keyframes mp-breathe { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+            .mini-pet .mp-scale { position: absolute; top: 0; left: 0; width: 98px; transform: scale(0.37); transform-origin: top left; }
+            .mini-pet .mp-ears { display: flex; justify-content: center; gap: 16px; margin-bottom: -10px; }
+            .mini-pet .mp-ear { width: 24px; height: 52px; background: #FFF5F8; border-radius: 12px 12px 10px 10px; position: relative; box-shadow: inset 0 0 0 2px #FADADD; }
+            .mini-pet .mp-ear-l { transform: rotate(-12deg); }
+            .mini-pet .mp-ear-r { transform: rotate(12deg); }
+            .mini-pet .mp-ear-in { position: absolute; width: 10px; height: 30px; background: #F5C9D6; border-radius: 5px; top: 12px; left: 50%; transform: translateX(-50%); }
+            .mini-pet .mp-head { width: 88px; height: 80px; background: #FFF5F8; border-radius: 50%; margin: 0 auto; position: relative; box-shadow: inset 0 0 0 2px #FADADD; }
+            .mini-pet .mp-eye { position: absolute; width: 10px; height: 10px; background: #3A2030; border-radius: 50%; top: 32px; }
+            .mini-pet .mp-eye-l { left: 18px; } .mini-pet .mp-eye-r { right: 18px; }
+            .mini-pet .mp-cheek { position: absolute; width: 20px; height: 11px; background: #F5C9D6; border-radius: 50%; top: 46px; opacity: 0.8; }
+            .mini-pet .mp-cheek-l { left: 8px; } .mini-pet .mp-cheek-r { right: 8px; }
+            .mini-pet .mp-nose { position: absolute; width: 8px; height: 5px; background: #E8A0B4; border-radius: 50%; top: 42px; left: 50%; transform: translateX(-50%); }
+            .mini-pet .mp-mouth { position: absolute; width: 16px; height: 8px; border-bottom: 3px solid #E8A0B4; border-radius: 0 0 8px 8px; top: 51px; left: 50%; transform: translateX(-50%); }
+            .mini-pet .mp-body { width: 78px; height: 64px; background: #FFF5F8; border-radius: 38px 38px 32px 32px; margin: -6px auto 0; position: relative; box-shadow: inset 0 0 0 2px #FADADD; }
+            .mini-pet .mp-tummy { position: absolute; width: 42px; height: 38px; background: rgba(255,240,248,0.9); border-radius: 50%; top: 10px; left: 50%; transform: translateX(-50%); }
+            /* Luna the Cat */
+            .mini-pet[data-pet="lavender"] .mp-ear { height: 34px; margin-top: 18px; border-radius: 50% 50% 6px 6px; background: #E4D8F5; box-shadow: inset 0 0 0 2px #D4C0EC; }
+            .mini-pet[data-pet="lavender"] .mp-ear-in { height: 18px; background: #C9AEE0; }
+            .mini-pet[data-pet="lavender"] .mp-head, .mini-pet[data-pet="lavender"] .mp-body { background: #EDE4F5; box-shadow: inset 0 0 0 2px #D4C0EC; }
+            .mini-pet[data-pet="lavender"] .mp-cheek { background: #D8C8ED; }
+            .mini-pet[data-pet="lavender"] .mp-tummy { background: rgba(245,240,250,0.9); }
+            .mini-pet[data-pet="lavender"] .mp-head::before, .mini-pet[data-pet="lavender"] .mp-head::after {
+                content: ''; position: absolute; top: 44px; width: 20px; height: 2px;
+                background: #B8A0D0; box-shadow: 0 6px 0 #B8A0D0, 0 12px 0 #B8A0D0;
+            }
+            .mini-pet[data-pet="lavender"] .mp-head::before { left: -16px; transform: rotate(-6deg); }
+            .mini-pet[data-pet="lavender"] .mp-head::after { right: -16px; transform: rotate(6deg); }
+            /* Theo the Bear */
+            .mini-pet[data-pet="sage"] .mp-ear { width: 26px; height: 26px; margin-top: 26px; border-radius: 50%; background: #E8D4B8; box-shadow: inset 0 0 0 2px #D4BB94; }
+            .mini-pet[data-pet="sage"] .mp-ear-in { width: 12px; height: 12px; border-radius: 50%; top: 7px; background: #C5A578; }
+            .mini-pet[data-pet="sage"] .mp-head, .mini-pet[data-pet="sage"] .mp-body { background: #E8D4B8; box-shadow: inset 0 0 0 2px #D4BB94; }
+            .mini-pet[data-pet="sage"] .mp-cheek { background: #D4B88E; }
+            .mini-pet[data-pet="sage"] .mp-tummy { background: rgba(245,235,216,0.9); }
+            /* Sunny the Fox */
+            .mini-pet[data-pet="golden"] .mp-ear { height: 46px; margin-top: 6px; border-radius: 50% 50% 4px 4px; background: #F5B878; box-shadow: inset 0 0 0 2px #E89850; }
+            .mini-pet[data-pet="golden"] .mp-ear-in { top: 4px; height: 16px; width: 8px; background: #6B4423; }
+            .mini-pet[data-pet="golden"] .mp-head, .mini-pet[data-pet="golden"] .mp-body { background: #F5B878; box-shadow: inset 0 0 0 2px #E89850; }
+            .mini-pet[data-pet="golden"] .mp-tummy { background: rgba(255,248,237,0.95); }
+            .mini-pet[data-pet="golden"] .mp-cheek { background: #E89850; }
 
             /* Phones: 6 nav links don't fit — keep the bunny, let the links swipe sideways */
             @media (max-width: 640px) {
@@ -518,6 +597,9 @@
                 _user = await _showAuthModal();
             }
         }
+
+        // The stored session can be up to an hour old — fetch the fresh user so a new Pro purchase shows right away
+        try { await window.mochiRefreshUser(); } catch (_) {}
 
         _injectSignOut();
 

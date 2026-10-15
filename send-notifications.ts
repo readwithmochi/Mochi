@@ -6,7 +6,7 @@
 // 2. Name it: send-notifications
 // 3. Paste this entire file
 // 4. Go to Settings → Secrets and add:
-//    VAPID_PRIVATE_KEY = O6XcxbR6rQXNmOIRbcMmaVmYIADe30W1rA-ETT5PbPI
+//    VAPID_PRIVATE_KEY = (your private key — NEVER write it in this file, the GitHub repo is public)
 // 5. Click Deploy
 //
 // HOW TO SEND A NOTIFICATION (test it):

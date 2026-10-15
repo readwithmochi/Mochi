@@ -175,6 +175,50 @@
 
         .page-msg { text-align: center; padding: 80px 24px; color: var(--text-muted); font-size: 1rem; }
 
+        /* ── Cover picker ── */
+        .cover-col { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+        .btn-change-cover {
+            background: none; border: none; cursor: pointer;
+            font-family: 'Nunito', sans-serif; font-size: 0.7rem; font-weight: 700;
+            color: var(--pink-deep); padding: 2px 4px; border-radius: 6px;
+        }
+        .btn-change-cover:hover { background: var(--pink-soft); }
+        .cover-picker-overlay {
+            position: fixed; inset: 0; z-index: 300;
+            background: rgba(74,48,64,0.5); backdrop-filter: blur(8px);
+            display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+        .cover-picker-overlay.open { display: flex; }
+        .cover-picker {
+            background: var(--surface); color: var(--text);
+            border-radius: 24px; width: 100%; max-width: 560px; max-height: 85vh;
+            display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 24px 80px rgba(74,48,64,0.25);
+        }
+        .cover-picker-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 22px 24px 6px;
+        }
+        .cover-picker-head h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; }
+        .cover-picker-sub { padding: 0 24px 14px; font-size: 0.8rem; color: var(--text-muted); }
+        .cover-picker-close {
+            background: var(--pink-soft); color: var(--text-muted); border: none; border-radius: 50%;
+            width: 32px; height: 32px; cursor: pointer; font-size: 0.9rem;
+        }
+        .cover-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+            gap: 12px; padding: 4px 24px 24px; overflow-y: auto;
+        }
+        .cover-option {
+            aspect-ratio: 2/3; border-radius: 10px; overflow: hidden; cursor: pointer;
+            border: 3px solid transparent; background: var(--pink-soft); padding: 0;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+        .cover-option:hover { transform: translateY(-3px); }
+        .cover-option.current { border-color: var(--pink-deep); }
+        .cover-option img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .cover-picker-msg { grid-column: 1 / -1; text-align: center; padding: 30px 0; color: var(--text-muted); font-size: 0.85rem; }
+
         @media (max-width: 580px) {
             header { padding: 14px 18px; }
             nav a { padding: 6px 10px; font-size: 0.8rem; }
@@ -200,6 +244,17 @@
 
 <div class="detail-page">
     <div class="page-msg" id="pageMsg">Loading... 🌸</div>
+</div>
+
+<div class="cover-picker-overlay" id="coverPickerOverlay">
+    <div class="cover-picker">
+        <div class="cover-picker-head">
+            <h3>Pick your cover</h3>
+            <button class="cover-picker-close" id="coverPickerClose" aria-label="Close">✕</button>
+        </div>
+        <p class="cover-picker-sub">Every edition we could find. Tap the one you love.</p>
+        <div class="cover-grid" id="coverGrid"></div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -243,7 +298,10 @@ function renderPage() {
         <a href="shelf.html" class="back-link">← Back to shelf</a>
 
         <div class="book-header">
-            <div class="cover-thumb">${coverHTML}</div>
+            <div class="cover-col">
+                <div class="cover-thumb">${coverHTML}</div>
+                <button class="btn-change-cover" id="changeCoverBtn">✎ Change cover</button>
+            </div>
             <div class="book-title-area">
                 <div class="book-title"></div>
                 <div class="book-author"></div>
@@ -352,6 +410,7 @@ function renderPage() {
     }
 
     document.getElementById('saveBtn').addEventListener('click', saveBook);
+    document.getElementById('changeCoverBtn').addEventListener('click', openCoverPicker);
 
     document.getElementById('removeBtn').addEventListener('click', async () => {
         if (!confirm(`Remove "${book.title}" from your shelf?`)) return;
@@ -404,6 +463,78 @@ async function saveBook() {
     ok.classList.add('show');
     setTimeout(() => ok.classList.remove('show'), 2500);
 }
+
+// ── Cover picker: every cover Open Library has for this book's editions ──
+async function findCoverOptions(title, author) {
+    const timeout = () => ({ signal: AbortSignal.timeout?.(10000) });
+    const search = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}&limit=1&fields=key,cover_i`, timeout());
+    const doc = (await search.json()).docs?.[0];
+    if (!doc?.key) return [];
+    const ids = [];
+    const add = id => { if (id > 0 && !ids.includes(id)) ids.push(id); };
+    add(doc.cover_i);
+    const [work, editions] = await Promise.all([
+        fetch(`https://openlibrary.org${doc.key}.json`, timeout()).then(r => r.json()).catch(() => ({})),
+        fetch(`https://openlibrary.org${doc.key}/editions.json?limit=100`, timeout()).then(r => r.json()).catch(() => ({})),
+    ]);
+    (work.covers || []).forEach(add);
+    (editions.entries || []).forEach(e => (e.covers || []).forEach(add));
+    return ids.slice(0, 30);
+}
+
+async function openCoverPicker() {
+    const overlay = document.getElementById('coverPickerOverlay');
+    const grid = document.getElementById('coverGrid');
+    overlay.classList.add('open');
+    grid.innerHTML = '<div class="cover-picker-msg">Finding covers... 🌸</div>';
+
+    let ids = [];
+    try { ids = await findCoverOptions(book.title, book.author); } catch (_) {}
+    if (book.coverId && !ids.includes(book.coverId)) ids.unshift(book.coverId);
+
+    grid.innerHTML = '';
+    if (!ids.length) {
+        grid.innerHTML = '<div class="cover-picker-msg">No covers found for this book right now. Try again later!</div>';
+        return;
+    }
+    ids.forEach(id => {
+        const btn = document.createElement('button');
+        btn.className = `cover-option${id === book.coverId ? ' current' : ''}`;
+        const img = document.createElement('img');
+        img.src = `https://covers.openlibrary.org/b/id/${id}-M.jpg`;
+        img.alt = 'Cover option';
+        img.loading = 'lazy';
+        // Open Library returns a 1px image for missing covers — hide those
+        img.onload = () => { if (img.naturalWidth <= 1) btn.remove(); };
+        img.onerror = () => btn.remove();
+        btn.appendChild(img);
+        btn.addEventListener('click', () => chooseCover(id));
+        grid.appendChild(btn);
+    });
+}
+
+async function chooseCover(id) {
+    book = { ...book, coverId: id };
+    const books = window.mochiGetBooks();
+    const idx = books.findIndex(b => b.id === book.id);
+    if (idx !== -1) books[idx] = book;
+    try { sessionStorage.setItem('mochiCurrentBook', JSON.stringify(book)); } catch (_) {}
+    window.mochiUpdateBook(book);
+
+    const thumb = document.querySelector('.cover-thumb');
+    thumb.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = `https://covers.openlibrary.org/b/id/${id}-L.jpg`;
+    img.alt = book.title;
+    thumb.appendChild(img);
+    document.getElementById('coverPickerOverlay').classList.remove('open');
+}
+
+document.getElementById('coverPickerClose').addEventListener('click', () =>
+    document.getElementById('coverPickerOverlay').classList.remove('open'));
+document.getElementById('coverPickerOverlay').addEventListener('click', e => {
+    if (e.target.id === 'coverPickerOverlay') e.target.classList.remove('open');
+});
 
 window.initMochi(async () => {
     const id = new URLSearchParams(window.location.search).get('id');
