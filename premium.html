@@ -16,7 +16,7 @@
             --pink: #E8A0B4;
             --pink-deep: #C97A8E;
             --gold: #E8C05A;
-            --gold-deep: #C99A2E;
+            --gold-deep: #8F6A12;
             --text: #4A3040;
             --text-muted: #9B7B8A;
             --border: #F0DDE5;
@@ -114,7 +114,7 @@
 
         .price-card .save-badge {
             position: absolute; top: -13px; left: 50%; transform: translateX(-50%);
-            background: var(--gold); color: #fff;
+            background: var(--gold); color: #5A3E08;
             font-size: 0.68rem; font-weight: 700; letter-spacing: 0.5px;
             padding: 5px 14px; border-radius: 100px;
         }
@@ -127,7 +127,7 @@
         .upgrade-btn {
             width: 100%;
             padding: 14px;
-            background: var(--pink);
+            background: var(--pink-deep);
             color: #fff;
             border: none;
             border-radius: 14px;
@@ -137,11 +137,11 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .upgrade-btn:hover { background: var(--pink-deep); transform: translateY(-2px); }
+        .upgrade-btn:hover { filter: brightness(0.92); transform: translateY(-2px); }
         .upgrade-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
         .price-card.featured .upgrade-btn { background: var(--gold-deep); }
-        .price-card.featured .upgrade-btn:hover { background: #B08420; }
+        .price-card.featured .upgrade-btn:hover { filter: brightness(1.1); }
 
         .downgrade-note {
             text-align: center;

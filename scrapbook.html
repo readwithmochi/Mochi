@@ -126,7 +126,7 @@
             font-family: 'Nunito', sans-serif; font-size: 0.88rem;
             color: var(--text); outline: none; transition: border-color 0.2s;
         }
-        .date-input:focus, .notes-input:focus, .page-input:focus { border-color: var(--pink); background: #fff; }
+        .date-input:focus, .notes-input:focus, .page-input:focus { border-color: var(--pink); background: var(--surface, #fff); }
         .page-input { -moz-appearance: textfield; }
         .page-input::-webkit-outer-spin-button,
         .page-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -160,7 +160,7 @@
             font-family: 'Nunito', sans-serif; font-size: 0.9rem; font-weight: 700;
             cursor: pointer; transition: all 0.2s;
         }
-        .btn-save:hover { background: #b8697d; }
+        .btn-save:hover { filter: brightness(0.92); }
         .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
 
         .save-ok { font-size: 0.82rem; font-weight: 700; color: #2A8050; display: none; }

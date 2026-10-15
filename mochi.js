@@ -162,9 +162,18 @@
     // ── Companion theme (site-wide palette) ─────────
     const _COMPANION_PALETTES = {
         lavender: {
-            '--pink-soft': '#241B2E', '--pink-light': '#4A3560', '--pink': '#8B6BB8', '--pink-deep': '#B497E8',
+            '--pink-soft': '#241B2E', '--pink-light': '#4A3560', '--pink': '#8B6BB8', '--pink-deep': '#9575CD',
             '--text': '#EDE4F5', '--text-muted': '#B49BC9', '--border': '#3D2E4D', '--surface': '#2A2035',
             body: '#17111E',
+            // Luna is the only dark theme: pages hardcode some white backgrounds, darken those here
+            extra: `
+                :root[data-companion="lavender"] { color-scheme: dark; }
+                :root[data-companion="lavender"] header { background: rgba(23,17,30,0.92); }
+                :root[data-companion="lavender"] input:focus,
+                :root[data-companion="lavender"] textarea:focus,
+                :root[data-companion="lavender"] select:focus { background: var(--surface); }
+                :root[data-companion="lavender"] .book-modal { background: var(--surface); }
+            `,
         },
         sage: {
             '--pink-soft': '#F1EDE3', '--pink-light': '#D9CBAE', '--pink': '#7A9B74', '--pink-deep': '#5E7D58',
@@ -190,10 +199,11 @@
             document.head.appendChild(_themeStyleEl);
         }
         if (palette) {
-            const vars = Object.keys(palette).filter(k => k !== 'body').map(k => `${k}: ${palette[k]};`).join(' ');
+            const vars = Object.keys(palette).filter(k => k.startsWith('--')).map(k => `${k}: ${palette[k]};`).join(' ');
             _themeStyleEl.textContent = `
                 :root[data-companion="${companion}"] { ${vars} }
                 :root[data-companion="${companion}"] body { background: ${palette.body}; }
+                ${palette.extra || ''}
             `;
         } else {
             _themeStyleEl.textContent = '';

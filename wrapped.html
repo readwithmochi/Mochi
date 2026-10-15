@@ -18,6 +18,7 @@
             --text: #4A3040;
             --text-muted: #9B7B8A;
             --border: #F0DDE5;
+            --surface: #FDF8FA;
         }
 
         html { scroll-behavior: smooth; }
@@ -26,6 +27,8 @@
             font-family: 'Nunito', sans-serif;
             color: var(--text);
             overflow-x: hidden;
+            /* Playfair's default digits bob up and down ("3" dips below "1.568") — keep them level */
+            font-variant-numeric: lining-nums;
         }
 
         /* ── Header ── */
@@ -120,7 +123,7 @@
         /* Section 1: Hero         */
         /* ─────────────────────── */
         .s-hero {
-            background: linear-gradient(160deg, #FDF8FA 0%, #FAE8EF 50%, #F5C9D6 100%);
+            background: linear-gradient(160deg, var(--surface) 0%, var(--pink-soft) 50%, var(--pink-light) 100%);
         }
         .hero-year {
             font-size: clamp(0.85rem, 2vw, 1rem);
@@ -160,7 +163,7 @@
         /* Section 2: Numbers      */
         /* ─────────────────────── */
         .s-numbers { background: #1E0F1A; color: #fff; }
-        .s-numbers .section-label { color: var(--pink-light); }
+        .s-numbers .section-label { color: var(--pink); }
 
         .numbers-grid {
             display: flex;
@@ -208,10 +211,37 @@
         }
 
         /* ─────────────────────── */
+        /* Section 2b: Goal        */
+        /* ─────────────────────── */
+        .s-goal { background: var(--pink-soft); }
+        .s-goal .section-label { color: var(--pink-deep); opacity: 1; }
+        .goal-emoji { font-size: 3rem; margin-bottom: 8px; }
+        .goal-count {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(3rem, 10vw, 6rem); font-weight: 700; line-height: 1;
+            color: var(--text); margin: 8px 0 24px;
+        }
+        .goal-count span { color: var(--text-muted); font-size: 0.5em; }
+        .goal-bar {
+            width: min(420px, 100%); height: 16px; border-radius: 100px;
+            background: var(--border); overflow: hidden; margin: 0 auto 28px;
+        }
+        .goal-bar-fill {
+            height: 100%; width: 0; border-radius: 100px;
+            background: linear-gradient(90deg, var(--pink), var(--pink-deep));
+            transition: width 1.4s cubic-bezier(0.34,1.2,0.64,1);
+        }
+        .goal-title {
+            font-family: 'Playfair Display', serif; font-style: italic;
+            font-size: clamp(1.6rem, 4vw, 2.4rem); color: var(--pink-deep); margin-bottom: 10px;
+        }
+        .s-goal .section-lead { color: var(--text); }
+
+        /* ─────────────────────── */
         /* Section 3: Rhythm       */
         /* ─────────────────────── */
         .s-rhythm { background: #FEF5E8; }
-        .s-rhythm .section-label { color: #C4956A; }
+        .s-rhythm .section-label { color: #A0703F; }
         .s-rhythm .section-big { color: #4A3020; }
 
         .month-chart {
@@ -328,7 +358,7 @@
         /* ─────────────────────── */
         /* Section 6: Top Books    */
         /* ─────────────────────── */
-        .s-top { background: #FDF8FA; }
+        .s-top { background: var(--surface); }
         .top-books {
             display: flex;
             gap: 20px;
@@ -407,11 +437,12 @@
         /* Section 8: Summary      */
         /* ─────────────────────── */
         .s-summary {
-            background: linear-gradient(160deg, #C97A8E 0%, #E8A0B4 60%, #F5C9D6 100%);
+            /* deep enough in every theme for white text */
+            background: linear-gradient(160deg, color-mix(in srgb, var(--pink-deep) 60%, #2A1020) 0%, color-mix(in srgb, var(--pink-deep) 85%, #2A1020) 100%);
             color: #fff;
         }
         .summary-card {
-            background: rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.1);
             border: 1.5px solid rgba(255,255,255,0.35);
             border-radius: 24px;
             padding: 32px 36px;
@@ -449,7 +480,7 @@
         .btn-share:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(74,48,64,0.2); }
 
         .btn-card {
-            background: var(--text);
+            background: color-mix(in srgb, var(--pink-deep) 30%, #1E0F1A);
             color: #fff;
             border: none;
             border-radius: 100px;
@@ -535,7 +566,7 @@
             flex-direction: column;
             text-align: center;
             padding: 100px 32px 60px;
-            background: linear-gradient(160deg, #FDF8FA, #FAE8EF);
+            background: linear-gradient(160deg, var(--surface), var(--pink-soft));
         }
         .empty-wrapped.show { display: flex; }
         .empty-wrapped h2 { font-family: 'Playfair Display', serif; font-size: 2rem; margin: 16px 0 10px; }
@@ -550,7 +581,7 @@
             font-size: 0.9rem;
             transition: all 0.2s;
         }
-        .btn-go-shelf:hover { background: #b8697d; transform: translateY(-1px); }
+        .btn-go-shelf:hover { filter: brightness(0.92); transform: translateY(-1px); }
 
         /* ── Responsive ── */
         @media (max-width: 600px) {
@@ -624,6 +655,16 @@
     <p class="fun-fact fade-up delay-4" id="funFact"></p>
 </section>
 
+<!-- Section 2b: Reading goal (only shown when a goal is set) -->
+<section class="wrapped-section s-goal" id="s2b" style="display:none">
+    <div class="goal-emoji fade-up" id="goalEmoji">🌱</div>
+    <p class="section-label fade-up delay-1">Your reading goal</p>
+    <div class="goal-count fade-up delay-1" id="goalCount">0 <span>/ 0</span></div>
+    <div class="goal-bar fade-up delay-2"><div class="goal-bar-fill" id="goalBarFill"></div></div>
+    <div class="goal-title fade-up delay-3" id="goalTitle"></div>
+    <p class="section-lead fade-up delay-4" id="goalDesc"></p>
+</section>
+
 <!-- Section 3: Rhythm -->
 <section class="wrapped-section s-rhythm" id="s3">
     <p class="section-label fade-up">Your reading rhythm</p>
@@ -642,7 +683,7 @@
 
 <!-- Section 5: Vibe -->
 <section class="wrapped-section s-vibe" id="s5">
-    <p class="section-label fade-up" id="vibeLabel" style="color:rgba(255,255,255,0.7)">Your reading vibe was</p>
+    <p class="section-label fade-up" id="vibeLabel">Your reading vibe was</p>
     <div class="vibe-word fade-up delay-1" id="vibeWord">—</div>
     <div class="vibe-tags fade-up delay-2" id="vibeTags"></div>
     <p class="section-lead fade-up delay-3" id="vibeDesc" style="opacity:0.8">—</p>
@@ -796,8 +837,10 @@ function computeWrapped(books) {
     // Fun fact
     const funFact = getFunFact(totalBooks, totalPages);
 
+    const goal = getGoalResult(totalBooks, window.mochiGetGoal());
+
     return {
-        year, totalBooks, totalPages, byMonth, bestMonthIdx,
+        year, totalBooks, totalPages, byMonth, bestMonthIdx, goal,
         favAuthor, favAuthorCount, authorBooks,
         topTag, topTagsDisplay, vibe,
         topRated, hasAllFiveStars,
@@ -893,6 +936,25 @@ function getPersonality(tagCounts, books) {
     };
 }
 
+// Every outcome is celebrated — free users and missed goals are never shamed
+function getGoalResult(books, target) {
+    if (!target) return null;
+    const pct = books / target;
+    const left = target - books;
+    const december = new Date().getMonth() === 11;
+    const base = { books, target, pct };
+    if (pct >= 1.2) return { ...base, emoji: '🏆', title: 'Overachiever.', short: 'overachiever 🏆',
+        desc: `You aimed for ${target} and read ${books}. That's ${books - target} bonus book${books - target > 1 ? 's' : ''}!` };
+    if (pct >= 1) return { ...base, emoji: '🎉', title: 'Goal crushed.', short: 'goal crushed 🎉',
+        desc: `You set out to read ${target} books and you did it. Exactly as planned.` };
+    if (pct >= 0.5) return { ...base, emoji: '🌙', title: 'More than halfway.', short: 'over halfway 🌙',
+        desc: december
+            ? `${books} of ${target} books. More than half your goal, and that's real progress.`
+            : `${books} of ${target} books, ${left} to go. There's still time to make it.` };
+    return { ...base, emoji: '🌱', title: 'Every book counts.', short: 'every book counts 🌱',
+        desc: `${books} of ${target} books this year. Goals are wishes, not rules. Your next chapter is waiting.` };
+}
+
 function getFunFact(books, pages) {
     if (pages === 0) {
         if (books === 1) return '✦ Your first book of the year. The beginning of something beautiful.';
@@ -934,6 +996,21 @@ async function render(data) {
         dot.title = readThisYear[i].title;
         dotsEl.appendChild(dot);
     });
+
+    // Section 2b: Reading goal
+    if (data.goal) {
+        const g = data.goal;
+        document.getElementById('s2b').style.display = '';
+        document.getElementById('goalEmoji').textContent = g.emoji;
+        const countEl = document.getElementById('goalCount');
+        countEl.textContent = `${g.books} `;
+        const of = document.createElement('span');
+        of.textContent = `/ ${g.target}`;
+        countEl.appendChild(of);
+        document.getElementById('goalTitle').textContent = g.title;
+        document.getElementById('goalDesc').textContent = g.desc;
+        document.getElementById('goalBarFill').dataset.width = `${Math.min(g.pct, 1) * 100}%`;
+    }
 
     // Section 3: Month chart
     const chartEl = document.getElementById('monthChart');
@@ -1180,6 +1257,7 @@ async function drawWrappedCard(data, themeKey, nickname, scale) {
         document.fonts.load('italic 400 96px "Playfair Display"'),
         document.fonts.load('800 30px Nunito'),
         document.fonts.load('600 30px Nunito'),
+        document.fonts.load('900 150px Nunito'),
     ]).catch(() => {});
 
     const covers = await Promise.all(data.topRated.map(async b => {
@@ -1230,8 +1308,9 @@ async function drawWrappedCard(data, themeKey, nickname, scale) {
     stats.forEach((s, i) => {
         const cx = PAD + INNER * (i + 0.5) / stats.length;
         ctx.fillStyle = t.accent;
-        fitFont(ctx, s.val.toLocaleString(), INNER / stats.length - 60, 150, sz => serif(700, sz));
-        ctx.fillText(s.val.toLocaleString(), cx, 660);
+        // Nunito, not Playfair: Playfair's old-style digits sit at different heights ("4" dips below "1.868")
+        fitFont(ctx, s.val.toLocaleString(), INNER / stats.length - 60, 140, sz => sans(900, sz));
+        ctx.fillText(s.val.toLocaleString(), cx, 655);
         ctx.fillStyle = t.muted;
         ctx.font = sans(800, 26);
         setSpacing(ctx, 4);
@@ -1284,9 +1363,10 @@ async function drawWrappedCard(data, themeKey, nickname, scale) {
     // Highlights
     const rows = [];
     const bestCount = data.byMonth[data.bestMonthIdx].length;
+    if (data.goal) rows.push(['Reading goal', `${data.goal.books}/${data.goal.target} · ${data.goal.short}`]);
     if (bestCount > 0) rows.push(['Best month', MONTH_FULL[data.bestMonthIdx]]);
     rows.push(['Fave author', data.favAuthor]);
-    if (data.vibe.word !== data.personality.type) rows.push(['Top vibe', data.vibe.word]);
+    if (data.vibe.word !== data.personality.type && rows.length < 4) rows.push(['Top vibe', data.vibe.word]);
     rows.push(['Reader type', data.personality.type]);
 
     const ROW_H = 84, panelY = 1340;
@@ -1427,6 +1507,11 @@ function setupScrollObserver(sectionIds) {
             if (entry.isIntersecting) {
                 entry.target.querySelectorAll('.fade-up').forEach(el => el.classList.add('visible'));
 
+                if (entry.target.id === 's2b') {
+                    const fill = document.getElementById('goalBarFill');
+                    setTimeout(() => { fill.style.width = fill.dataset.width || '0'; }, 400);
+                }
+
                 // Animate bar chart when s3 becomes visible
                 if (entry.target.id === 's3' && !chartAnimated.has('s3')) {
                     chartAnimated.add('s3');
@@ -1480,7 +1565,7 @@ function init() {
 
     render(data);
     setupCard(data);
-    setupScrollObserver(['s1','s2','s3','s4','s5','s6','s7','s8']);
+    setupScrollObserver(['s1','s2', ...(data.goal ? ['s2b'] : []), 's3','s4','s5','s6','s7','s8']);
 }
 
 window.initMochi(() => init());

@@ -187,7 +187,7 @@
             color: var(--text); outline: none; transition: border-color 0.2s;
             box-shadow: 0 2px 8px rgba(232,160,180,0.08);
         }
-        .search-input:focus { border-color: var(--pink); background: #fff; }
+        .search-input:focus { border-color: var(--pink); background: var(--surface); }
         .search-input::placeholder { color: var(--text-muted); }
         .search-icon {
             position: absolute; left: 18px;
@@ -297,7 +297,7 @@
             font-family: 'Nunito', sans-serif; font-size: 0.88rem; font-weight: 700;
             cursor: pointer; transition: all 0.2s;
         }
-        .modal-btn-add:hover { background: #b8697d; }
+        .modal-btn-add:hover { filter: brightness(0.92); }
         .modal-btn-on-shelf {
             flex: 1; background: #EEF7F2; border: 1.5px solid #B8D4C5;
             border-radius: 14px; padding: 13px 20px;
@@ -449,16 +449,16 @@ const ROMANCE_BOOKS = [
 
 const DARK_ROMANCE_BOOKS = [
     { title: "Haunting Adeline", author: "H.D. Carlton" },
-    { title: "Stalking Adeline", author: "H.D. Carlton" },
+    { title: "Hunting Adeline", author: "H.D. Carlton" },
     { title: "Twisted Love", author: "Ana Huang" },
     { title: "Twisted Games", author: "Ana Huang" },
     { title: "Twisted Hate", author: "Ana Huang" },
     { title: "King of Wrath", author: "Ana Huang" },
-    { title: "From Blood and Ash", author: "Jennifer L. Armentrout" },
+    { title: "Twisted Lies", author: "Ana Huang" },
     { title: "A Shadow in the Ember", author: "Jennifer L. Armentrout" },
-    { title: "Icebreaker", author: "Hannah Grace" },
-    { title: "Daydream", author: "Hannah Grace" },
-    { title: "Powerless", author: "Lauren Roberts" },
+    { title: "Butcher & Blackbird", author: "Brynne Weaver" },
+    { title: "God of Malice", author: "Rina Kent" },
+    { title: "The Never King", author: "Nikki St. Crowe" },
     { title: "Corrupt", author: "Penelope Douglas" },
     { title: "Credence", author: "Penelope Douglas" },
     { title: "Birthday Girl", author: "Penelope Douglas" },
@@ -594,14 +594,14 @@ const MYSTERY_BOOKS = [
     { title: "Local Woman Missing", author: "Mary Kubica" },
     { title: "The Sanatorium", author: "Sarah Pearse" },
     { title: "The Plot", author: "Jean Hanff Korelitz" },
-    { title: "Lessons in Chemistry", author: "Bonnie Garmus" },
+    { title: "A Good Girl's Guide to Murder", author: "Holly Jackson" },
     { title: "Truly Devious", author: "Maureen Johnson" },
     { title: "Big Little Lies", author: "Liane Moriarty" },
     { title: "The Christie Affair", author: "Nina de Gramont" },
     { title: "The Death of Mrs Westaway", author: "Ruth Ware" },
     { title: "Pretty Girls", author: "Karin Slaughter" },
     { title: "The Woman in Cabin 10", author: "Ruth Ware" },
-    { title: "Nothing to See Here", author: "Kevin Wilson" },
+    { title: "The Appeal", author: "Janice Hallett" },
     { title: "The Last Murder at the End of the World", author: "Stuart Turton" },
 ];
 
@@ -631,6 +631,189 @@ const SCIFI_BOOKS = [
     { title: "The Kaiju Preservation Society", author: "John Scalzi" },
     { title: "Starter Villain", author: "John Scalzi" },
 ];
+
+// Handwritten Mochi teasers for every curated book — Open Library's descriptions are often missing or broken
+const BLURBS = {
+    // BookTok
+    "Fourth Wing": "A war college for dragon riders where cadets die daily, and the son of a traitor wants her dead. Or does he?",
+    "Iron Flame": "Violet survived Basgiath's first year. Now the real war starts, and the secrets are bigger than the dragons.",
+    "A Court of Thorns and Roses": "A huntress kills a wolf and is dragged into a faerie court full of masks, curses and a very dangerous High Lord.",
+    "A Court of Mist and Fury": "The sequel everyone says changed their life. Feyre is broken, and the Night Court is calling.",
+    "It Ends with Us": "Lily falls for a charming neurosurgeon, until her first love walks back into her life. Bring tissues.",
+    "Verity": "A struggling writer finds a chilling manuscript in a famous author's house that may be a confession. You will not sleep.",
+    "Reminders of Him": "After five years in prison, Kenna just wants to meet her daughter. The only person on her side is the wrong one.",
+    "The Seven Husbands of Evelyn Hugo": "A reclusive Hollywood icon finally tells the truth about her seven marriages, and the one great love behind them.",
+    "Daisy Jones and the Six": "The rise and messy fall of a 70s rock band, told like the best music documentary you've never seen.",
+    "Ugly Love": "Tate and Miles agree to no strings and no questions about the past. Famous last words.",
+    "Happy Place": "Exes pretending they're still together for one last week with their best friends. Painful in the best way.",
+    "Beach Read": "Two writers with opposite genres swap styles for a summer. Banter, grief and a slow burn by the lake.",
+    "Book Lovers": "A cutthroat literary agent keeps running into her editor nemesis in a tiny town. Small-town romance, flipped.",
+    "Icebreaker": "A figure skater forced to share a rink with the hockey captain. Rivals on ice, very much not in private.",
+    "The Cruel Prince": "A mortal girl in a faerie court, a prince who hates her and a power play nobody sees coming.",
+    "Powerless": "In a kingdom where the powerless are hunted, an ordinary girl competes in deadly trials next to the prince.",
+    "Twisted Love": "Her brother's cold, dangerous best friend agrees to look after her. Ice-cold hero, melting slowly.",
+    "People We Meet on Vacation": "Best friends, one summer trip a year, and the one trip that went wrong two years ago.",
+    "From Blood and Ash": "A Maiden chosen by the gods, a guard who isn't what he seems and a world built on lies.",
+    "The Midnight Library": "Between life and death is a library where every book is a life you could have lived. Which one do you choose?",
+    "Haunting Adeline": "A girl moves into her family's old manor and gets a stalker who won't leave. Dark romance, read the warnings.",
+    "The Spanish Love Deception": "She needs a fake date to her sister's wedding in Spain. The only volunteer is the coworker she can't stand.",
+    "King of Wrath": "An arranged marriage between a cold billionaire and an heiress who refuses to be scared of him.",
+    "Tomorrow and Tomorrow and Tomorrow": "Two friends make video games together over thirty years. A love story that isn't a romance.",
+    // Romance
+    "The Hating Game": "Two executive assistants who hate each other compete for the same promotion. The office tension is unreal.",
+    "November 9": "They meet on the same day every year. One day a year, one love story, one secret.",
+    "The Kiss Quotient": "An economist with autism decides to practice dating by hiring a professional. Sweet, smart and spicy.",
+    "The American Roommate Experiment": "Rosie's ceiling collapses and her best friend's cousin moves in. Close quarters, big feelings.",
+    "Get a Life Chloe Brown": "A woman writes a list to finally live, and needs her grumpy, tattooed superintendent to help.",
+    "Act Your Age Eve Brown": "Chaotic Eve runs over a B&B owner with her car and ends up working for him. Sunshine meets grump.",
+    "The Flatshare": "Tiffy works days, Leon works nights. They share a bed but have never met. Post-it notes become love letters.",
+    "The Switch": "A burned-out granddaughter and her grandmother swap lives for two months. Cozy, funny, heart-warming.",
+    "One Day in December": "She sees him from a bus window and spends a year searching, then her best friend introduces her new boyfriend.",
+    "The Unhoneymooners": "Olive gets a free honeymoon in Maui with her worst enemy because everyone else has food poisoning.",
+    "The Friend Zone": "A wedding planner who wants no kids and a firefighter who wants a big family. Funny until it isn't.",
+    "Part of Your World": "A small-town carpenter and a big-city doctor from a famous family. A real-world fairytale.",
+    "Just for the Summer": "Every person they date finds their soulmate right after. So they date each other to break the curse.",
+    "Beautiful Disaster": "A good girl, a bad-boy fighter and a bet that she can resist him for a month.",
+    "Boyfriend Material": "A tabloid-famous mess needs a respectable fake boyfriend. Enter the most uptight barrister in London.",
+    "In a Holidaze": "Stuck in a Christmas time loop at the family cabin, Maelyn has to get it right. Cozy holiday crush.",
+    // Dark romance
+    "Hunting Adeline": "The second half of the Cat and Mouse duet. The stakes, and the darkness, get even higher.",
+    "Twisted Games": "A royal princess and the bodyguard who's never supposed to touch her. Forbidden in every way.",
+    "Twisted Hate": "Jules and Josh can't stand each other, so they agree to a hate-with-benefits deal. No catching feelings.",
+    "Twisted Lies": "A charming billionaire with dark secrets and the girl who should run. The Twisted series finale.",
+    "A Shadow in the Ember": "A girl raised to kill the Primal of Death. The problem is, she doesn't want to anymore.",
+    "Butcher & Blackbird": "Two serial killers who only target other killers fall for each other. Dark, funny and weirdly wholesome.",
+    "God of Malice": "A college game of cat and mouse with the most dangerous guy on campus. Very dark, very obsessive.",
+    "The Never King": "A grown-up, villainous Peter Pan retelling. The Lost Boys are men now, and Wendy's descendant is the target.",
+    "Corrupt": "Erika's ex's older brother has waited years for revenge, and she's the target. Penelope Douglas at her darkest.",
+    "Credence": "After her parents die, Tiernan moves to a remote mountain cabin with her guardian and his sons. Heavy warnings.",
+    "Birthday Girl": "Jordan ends up living with her boyfriend's father. The tension is the whole book.",
+    "Terms and Conditions": "Declan needs a wife to inherit the family company, so he proposes to his assistant. Contract marriage perfection.",
+    "Binding 13": "A rugby star and a shy girl with a broken home at an Irish school. Long, raw and deeply addictive.",
+    "Devious Lies": "Enemies with history, a billionaire with a grudge and a girl who refuses to back down.",
+    "The Villain": "Cold Cillian Fitzpatrick and sweet Persephone strike a deal. He's not the hero, and he says so.",
+    "Kingdom of the Feared": "The finale of the Kingdom of the Wicked trilogy. Emilia and Wrath, crowns and curses.",
+    "Den of Vipers": "Given to a gang of feared criminals to pay her father's debt, Ryder finds she might be the most dangerous of all.",
+    // Thriller
+    "Gone Girl": "On their fifth anniversary, Amy disappears. Everyone suspects Nick. Nothing is what it seems.",
+    "Sharp Objects": "A reporter goes back to her small hometown to cover the murders of two girls. Dark and unsettling.",
+    "The Girl on the Train": "Every day, Rachel watches a perfect couple from her train window. Then she sees something she shouldn't.",
+    "Behind Closed Doors": "The perfect husband, the perfect home, the wife who's never alone. Something is very wrong.",
+    "The Silent Patient": "A famous painter shoots her husband and never speaks again. One therapist is determined to make her talk.",
+    "The Maidens": "A secret society of female students at Cambridge, a charismatic professor and a series of murders.",
+    "The Guest List": "A glamorous wedding on a remote Irish island. Someone won't leave it alive.",
+    "The Hunting Party": "Old friends at a remote Scottish lodge for New Year's Eve. One of them is dead, one of them did it.",
+    "In a Dark Dark Wood": "A hen party at a glass house in the woods, an invite she didn't want and a night she can't remember.",
+    "The Turn of the Key": "A dream nanny job in a smart house turns into a nightmare. She's writing to you from prison.",
+    "One by One": "A startup team on a luxury ski retreat. An avalanche, no way out, and people start disappearing.",
+    "Rock Paper Scissors": "A couple's anniversary weekend in a remote Scottish chapel. One of them is lying. Maybe both.",
+    "Sometimes I Lie": "Amber is in a coma and can hear everything. She doesn't know how she got there, but she's sure it was no accident.",
+    "His and Hers": "A news anchor and a detective, a murder in their hometown, and two sides of every story.",
+    "The Last Thing He Told Me": "Her husband vanishes leaving one note: protect her. Now she has to protect the stepdaughter who hates her.",
+    "Big Little Lies": "Three mums, one school trivia night, one dead body. Funny and secretly very dark.",
+    "Nine Perfect Strangers": "Nine guests at a luxury wellness retreat. The healing methods are getting extreme.",
+    "The Woman in the Window": "An agoraphobic woman spies on her neighbours and sees something terrible. Nobody believes her.",
+    "Finlay Donovan Is Killing It": "A broke mum is mistaken for a contract killer at a café. Chaotic and hilarious.",
+    "The Sanatorium": "A luxury hotel that used to be a sanatorium, a snowstorm and a missing woman. Atmospheric chills.",
+    "The Whisper Man": "A father and son move to a village with a dark past. Then a boy hears whispers at his window.",
+    "Local Woman Missing": "A woman and a child vanish. Eleven years later, the girl comes home. Twist after twist.",
+    "Pretty Girls": "Two estranged sisters and the disappearance that broke their family. Very dark, very gripping.",
+    // Fantasy
+    "Throne of Glass": "An assassin is pulled from a death camp to compete for the role of the king's champion.",
+    "The Wicked King": "Jude has the High King under her control. Keeping him there is the hard part.",
+    "Six of Crows": "Six outcasts, one impossible heist. Found family, banter and Kaz Brekker.",
+    "Crooked Kingdom": "Double-crossed and robbed, the crows want revenge. The heist sequel that breaks hearts.",
+    "Shadow and Bone": "An orphan soldier discovers a power that could free her country, and catches the eye of the Darkling.",
+    "The Night Circus": "A magical circus that only opens at night, and two young magicians bound in a deadly duel.",
+    "Caraval": "Scarlett has always wanted to see Caraval, a magical game. Then her sister is taken, and the game is real.",
+    "Legendary": "Tella made a deal to find her mother. Now she has to win Caraval and survive the Fates.",
+    "An Ember in the Ashes": "A slave spying for the rebels and an elite soldier who wants out. A brutal empire on Roman roots.",
+    "The Name of the Wind": "A legendary hero tells his true story, from orphan to the magic university and beyond.",
+    "The Poppy War": "A war orphan aces the empire's exam and finds a terrifying power. Brilliant and devastating.",
+    "Babel": "Translation is magic in 1830s Oxford, and it's fuelling an empire. Dark academia at its best.",
+    "Kingdom of the Wicked": "Her twin is murdered, and to get revenge she summons Wrath, a prince of hell.",
+    "The House in the Cerulean Sea": "A rule-following caseworker is sent to an island orphanage for magical kids. A warm hug in a book.",
+    "House of Salt and Sorrows": "Annaleigh's sisters keep dying. Their nights of dancing at secret balls might be the reason.",
+    "The Gilded Wolves": "Paris, 1889. A treasure hunter and his crew of misfits take on a heist for an ancient artefact.",
+    "Piranesi": "A man lives in an endless house of statues and tides. Strange, beautiful and unlike anything else.",
+    // Contemporary
+    "Normal People": "Connell and Marianne, school to university, never quite together, never quite apart.",
+    "Conversations with Friends": "Two college students get tangled up with a married couple in Dublin. Sharp and messy.",
+    "Beautiful World Where Are You": "Four friends in their late twenties trying to figure out love, sex and the world.",
+    "One Day": "Emma and Dexter, the same day every year for twenty years. You know it's going to hurt.",
+    "Me Before You": "A small-town girl becomes the carer of a man who has lost the will to live. Prepare to cry.",
+    "Malibu Rising": "Four famous siblings, one legendary party and the night everything burns down.",
+    "Where the Crawdads Sing": "The Marsh Girl grows up alone in the wild, until a murder points at her.",
+    "Lessons in Chemistry": "A brilliant chemist in the 60s ends up hosting a TV cooking show and teaching women to question everything.",
+    "Eleanor Oliphant Is Completely Fine": "Eleanor has the same routine every day and is completely fine. Until she isn't. Funny and moving.",
+    "A Little Life": "Four friends in New York over decades, and one with a past he can't escape. Devastating. Check warnings.",
+    "The Alchemist": "A shepherd boy follows a dream to the pyramids of Egypt. A short fable about chasing your purpose.",
+    "Dial A for Aunties": "Meddy accidentally kills her blind date, and her aunties help hide the body during a wedding. Chaos.",
+    "Remarkably Bright Creatures": "A widow working night shifts at an aquarium befriends a very clever octopus. Pure comfort.",
+    "Hello Beautiful": "Four sisters, one quiet basketball player and the love and loss that tie them together.",
+    "Demon Copperhead": "A boy born in the Appalachian mountains fights his way through foster care and the opioid crisis.",
+    "The Covenant of Water": "Three generations of a family in South India, and a mystery in the water that haunts them.",
+    // YA
+    "The Hunger Games": "Katniss volunteers to take her sister's place in a televised fight to the death.",
+    "Catching Fire": "Katniss survived the games. Now the Capitol wants her back in the arena.",
+    "Twilight": "Bella moves to rainy Forks and falls for a mysterious boy with a very big secret. The OG.",
+    "New Moon": "Edward leaves, and Bella finds comfort in her best friend Jacob. Team Edward or Team Jacob?",
+    "Divergent": "In a city divided into factions, Tris doesn't fit into any of them. That makes her dangerous.",
+    "The Fault in Our Stars": "Two teens with cancer fall in love. Funny, honest and absolutely heartbreaking.",
+    "Looking for Alaska": "Miles starts boarding school and meets Alaska, who changes everything. There's a before and an after.",
+    "Turtles All the Way Down": "Aza searches for a missing billionaire while battling the spiral of her own thoughts.",
+    "To All the Boys I've Loved Before": "Lara Jean's secret love letters get mailed out. All of them. To the boys.",
+    "The Summer I Turned Pretty": "Every summer at the beach house with the Fisher brothers. This summer, everything changes.",
+    "It's Not Summer Without You": "The beach house is about to be sold, and Belly has to choose between the brothers. Again.",
+    "Children of Blood and Bone": "Magic was stolen from her people. Zélie has one chance to bring it back.",
+    "City of Bones": "Clary sees a murder no one else can see, and falls into a hidden world of demon hunters.",
+    "The Maze Runner": "Thomas wakes up in a maze with no memory. The only way out is through.",
+    "The Lightning Thief": "Percy finds out he's the son of a Greek god, and he's being blamed for stealing Zeus's lightning bolt.",
+    "Wonder": "Auggie starts school for the first time with a face that makes people stare. Kindness wins.",
+    "Simon vs the Homo Sapiens Agenda": "Simon's secret emails with an anonymous boy are about to be exposed. Sweet coming-out story.",
+    "Aristotle and Dante Discover the Secrets of the Universe": "Two lonely Mexican-American boys find each other one summer. Quiet and beautiful.",
+    // Mystery
+    "And Then There Were None": "Ten strangers on an island, one by one they die. The original locked-room mystery.",
+    "Murder on the Orient Express": "A train stuck in the snow, a dead passenger, and every suspect has an alibi. Poirot's most famous case.",
+    "The Thursday Murder Club": "Four retirees solve cold cases for fun, until a real murder lands on their doorstep.",
+    "The Maid": "Molly the hotel maid finds a guest dead in his bed and becomes the main suspect. Cozy and clever.",
+    "The Inheritance Games": "A girl inherits a billionaire's fortune from a stranger. His grandsons want answers. So does she.",
+    "The Final Gambit": "The last game of the trilogy. Avery is close to claiming the fortune, and the danger is closer.",
+    "The Naturals": "A teen with a gift for reading people joins a secret FBI programme for profiling killers.",
+    "The Plot": "A failing writer steals a dead student's plot, and the book becomes a hit. Then someone knows.",
+    "A Good Girl's Guide to Murder": "Pip reopens a closed murder case for her school project. Someone wants her to stop.",
+    "Truly Devious": "A true-crime fan gets into an elite school where an infamous unsolved crime happened.",
+    "The Christie Affair": "In 1926, Agatha Christie disappeared for eleven days. Her husband's mistress knows why.",
+    "The Death of Mrs Westaway": "A broke tarot reader gets a letter about an inheritance that isn't hers. She goes anyway.",
+    "The Woman in Cabin 10": "A journalist on a luxury cruise sees a woman thrown overboard. But nobody is missing.",
+    "The Appeal": "A murder told entirely through emails and messages in a small theatre group. You're the detective.",
+    "The Last Murder at the End of the World": "The last island on Earth, the last village, and a murder that could end it all.",
+    // Sci-Fi
+    "The Hitchhikers Guide to the Galaxy": "Earth is demolished for a space highway. Arthur Dent's day is about to get very weird.",
+    "Dune": "A noble family on the desert planet Arrakis, giant sandworms and a prophecy about one boy.",
+    "Enders Game": "A child genius is trained in a space military school to save humanity from an alien threat.",
+    "Ready Player One": "In a virtual world packed with 80s nostalgia, the ultimate treasure hunt begins.",
+    "The Martian": "An astronaut stranded on Mars has to science his way to survival. Funny and gripping.",
+    "Project Hail Mary": "A man wakes up alone on a spaceship with no memory and has to save Earth. Trust us on this one.",
+    "Red Rising": "A miner from Mars infiltrates the ruling elite to bring them down from the inside. Brutal.",
+    "The Handmaids Tale": "In a future America, women are stripped of every right. Offred tells her story.",
+    "Never Let Me Go": "Three friends at an English boarding school slowly learn what they were created for.",
+    "Klara and the Sun": "An Artificial Friend watches the world from a shop window, waiting to be chosen.",
+    "Dark Matter": "A man is kidnapped and wakes up in a life he didn't choose. What if you'd taken the other path?",
+    "Recursion": "A disease of false memories is spreading. Two people try to stop it, again and again.",
+    "Upgrade": "A man's genes are secretly upgraded, and he's becoming something more than human.",
+    "The Long Way to a Small Angry Planet": "A cozy spaceship crew on a long journey. Found family in space.",
+    "A Memory Called Empire": "An ambassador arrives at the heart of a galactic empire to find her predecessor was murdered.",
+    "All Systems Red": "A security robot who just wants to watch TV keeps saving its humans anyway. Murderbot is iconic.",
+    "The Three-Body Problem": "A secret military project contacts aliens. Mind-bending hard sci-fi.",
+    "Station Eleven": "After a pandemic, a travelling theatre group performs Shakespeare across a broken world.",
+    "The Power": "Teenage girls discover they can release electric shocks, and the world's balance of power flips.",
+    "Children of Time": "The last humans search for a new home and find a planet ruled by evolved spiders.",
+    "Flowers for Algernon": "A man with an intellectual disability takes part in an experiment to increase his intelligence.",
+    "The Kaiju Preservation Society": "A delivery driver gets a job looking after giant monsters in a parallel world. Pure fun.",
+    "Starter Villain": "Charlie inherits his uncle's supervillain business, including volcano lair and unionised cats.",
+};
+const BLURB_BY_KEY = new Map(Object.entries(BLURBS).map(([t, b]) => [t.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim(), b]));
 
 const CATEGORIES = [
     { key: 'foryou',       label: '✨ For You',         type: 'foryou' },
@@ -830,7 +1013,7 @@ async function fetchSearch(query, page = 1) {
 function toCuratedCard(b) {
     return {
         title: b.title, author: b.author,
-        coverId: null, blurb: '', key: '',
+        coverId: null, blurb: BLURB_BY_KEY.get(titleKey(b.title)) || '', key: '',
         genres: (CURATED_GENRES.get(titleKey(b.title)) || []).slice(0, 2),
         needsLookup: true,
     };
@@ -874,7 +1057,9 @@ async function fetchDescription(key) {
         const raw = typeof data.description === 'string'
             ? data.description
             : data.description?.value || '';
-        descriptionCache[key] = cleanText(raw);
+        const text = cleanText(raw);
+        // Some Open Library entries are junk like "good" — treat anything that short as no description
+        descriptionCache[key] = text.length >= 60 ? text : '';
         return descriptionCache[key];
     } catch (_) {
         descriptionCache[key] = '';
@@ -998,7 +1183,7 @@ function createCard(book, onShelf, colorIdx) {
             } else {
                 loader.remove(); fallbackEl.style.display = 'flex';
             }
-            if (info.key) {
+            if (info.key && !book.blurb) {
                 fetchDescription(info.key).then(desc => {
                     const el = card.querySelector('.disc-blurb');
                     if (el && desc) el.textContent = desc;
@@ -1215,8 +1400,8 @@ function openBookModal(book) {
         summaryEl.innerHTML = '<span class="modal-summary-loading">Loading summary... 🌸</span>';
     }
 
-    // Always try to get the full description
-    if (book.key) {
+    // Curated books keep Mochi's own teaser; others try Open Library's description
+    if (book.key && !BLURB_BY_KEY.has(titleKey(book.title))) {
         fetchDescription(book.key).then(desc => {
             if (desc) summaryEl.textContent = desc;
             else if (!book.blurb) summaryEl.textContent = 'No summary available for this book yet.';
