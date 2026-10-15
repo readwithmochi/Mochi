@@ -448,6 +448,75 @@
         }
         .btn-share:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(74,48,64,0.2); }
 
+        .btn-card {
+            background: var(--text);
+            color: #fff;
+            border: none;
+            border-radius: 100px;
+            padding: 15px 34px;
+            font-family: 'Nunito', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 6px 20px rgba(74,48,64,0.25);
+        }
+        .btn-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(74,48,64,0.3); }
+        .summary-buttons { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+
+        /* ── Wrapped card modal ── */
+        .card-modal {
+            position: fixed; inset: 0; z-index: 500;
+            background: rgba(30,15,26,0.72);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+        .card-modal.show { display: flex; }
+        .card-modal [hidden] { display: none !important; }
+        .card-modal-inner {
+            position: relative;
+            display: flex; flex-direction: column; align-items: center; gap: 16px;
+            max-height: 100%;
+        }
+        .card-preview-wrap {
+            position: relative;
+            height: min(70vh, 640px);
+            aspect-ratio: 9 / 16;
+            max-width: calc(100vw - 40px);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+            background: var(--pink-soft);
+        }
+        .card-preview-wrap img { width: 100%; height: 100%; display: block; object-fit: cover; }
+        .card-upsell {
+            color: #fff; font-size: 0.82rem; font-weight: 700; text-decoration: none;
+            opacity: 0.85; text-align: center;
+        }
+        .card-upsell:hover { opacity: 1; text-decoration: underline; }
+        .card-loading {
+            position: absolute; inset: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; color: var(--text-muted); font-size: 0.9rem;
+        }
+        .card-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .card-actions button {
+            border: none; border-radius: 100px; padding: 12px 24px;
+            font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.9rem; cursor: pointer;
+            background: #fff; color: #C97A8E;
+        }
+        .card-actions button.primary { background: #C97A8E; color: #fff; }
+        .card-actions button:disabled { opacity: 0.5; cursor: default; }
+        .card-close {
+            position: absolute; top: -14px; right: -14px; z-index: 2;
+            width: 36px; height: 36px; border-radius: 50%; border: none;
+            background: #fff; color: #4A3040; font-size: 1.2rem; font-weight: 800; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
         .summary-mochi { font-size: 2.5rem; margin-bottom: 8px; }
         .summary-thanks {
             font-family: 'Playfair Display', serif;
@@ -623,8 +692,27 @@
         </div>
     </div>
 
-    <button class="btn-share fade-up delay-4" id="shareBtn">Share my Wrapped 🌸</button>
+    <div class="summary-buttons fade-up delay-4">
+        <button class="btn-card" id="cardBtn">Get my Wrapped card ✦</button>
+        <button class="btn-share" id="shareBtn">Share my Wrapped 🌸</button>
+    </div>
 </section>
+
+<!-- Wrapped card modal -->
+<div class="card-modal" id="cardModal">
+    <div class="card-modal-inner">
+        <button class="card-close" id="cardClose" aria-label="Close">×</button>
+        <div class="card-preview-wrap" id="cardPreviewWrap">
+            <div class="card-loading" id="cardLoading">Wrapping your year… 🎀</div>
+            <img id="cardPreview" alt="Your Reading Wrapped card" hidden>
+        </div>
+        <div class="card-actions" id="cardActions" hidden>
+            <button class="primary" id="cardShareBtn">Share 🌸</button>
+            <button id="cardSaveBtn">Save image</button>
+        </div>
+        <a class="card-upsell" id="cardUpsell" href="premium.html" hidden>✦ With Pro, your card comes in Luna, Theo or Sunny's colours</a>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="mochi.js"></script>
@@ -970,19 +1058,26 @@ async function render(data) {
     });
 }
 
+const _coverUrlCache = new Map();
+
+function getCoverUrl(book) {
+    if (!_coverUrlCache.has(book.id)) {
+        _coverUrlCache.set(book.id, (async () => {
+            if (book.coverId) return `https://covers.openlibrary.org/b/id/${book.coverId}-L.jpg`;
+            const q = encodeURIComponent(`${book.title} ${book.author}`);
+            const res = await fetch(`https://openlibrary.org/search.json?q=${q}&limit=1&fields=cover_i`);
+            const data = await res.json();
+            return data.docs?.[0]?.cover_i ? `https://covers.openlibrary.org/b/id/${data.docs[0].cover_i}-L.jpg` : null;
+        })().catch(() => null));
+    }
+    return _coverUrlCache.get(book.id);
+}
+
 async function loadTopCover(book, idx) {
     const placeholder = document.getElementById(`topCover_${idx}`);
     if (!placeholder) return;
     try {
-        let url = null;
-        if (book.coverId) {
-            url = `https://covers.openlibrary.org/b/id/${book.coverId}-L.jpg`;
-        } else {
-            const q = encodeURIComponent(`${book.title} ${book.author}`);
-            const res = await fetch(`https://openlibrary.org/search.json?q=${q}&limit=1&fields=cover_i`);
-            const data = await res.json();
-            if (data.docs?.[0]?.cover_i) url = `https://covers.openlibrary.org/b/id/${data.docs[0].cover_i}-L.jpg`;
-        }
+        const url = await getCoverUrl(book);
         if (url) {
             const img = document.createElement('img');
             img.className = 'top-book-cover';
@@ -992,6 +1087,305 @@ async function loadTopCover(book, idx) {
             placeholder.replaceWith(img);
         }
     } catch (_) {}
+}
+
+// ──────────────────────────────────────────
+// Shareable Wrapped card (Pro) — drawn on a canvas, 1080×1920 story format
+// ──────────────────────────────────────────
+const CARD_W = 1080, CARD_H = 1920;
+
+const CARD_THEMES = {
+    cottage: {
+        name: 'Mochi', emoji: '🐰', line: 'so proud of you, bestie',
+        bg: ['#FDF8FA', '#FAE8EF', '#F5C9D6'],
+        text: '#4A3040', muted: '#9B7B8A', accent: '#C97A8E', panel: 'rgba(255,255,255,0.65)', divider: 'rgba(201,122,142,0.2)',
+    },
+    lavender: {
+        name: 'Luna', emoji: '🐱', line: 'villain arc: complete.',
+        bg: ['#17111E', '#241B2E', '#4A3560'],
+        text: '#EDE4F5', muted: '#B49BC9', accent: '#B497E8', panel: 'rgba(255,255,255,0.07)', divider: 'rgba(180,151,232,0.2)',
+    },
+    sage: {
+        name: 'Theo', emoji: '🐻', line: 'good year. more books.',
+        bg: ['#FBF7EE', '#F1EDE3', '#D9CBAE'],
+        text: '#3A3226', muted: '#8A7D68', accent: '#5E7D58', panel: 'rgba(255,255,255,0.6)', divider: 'rgba(94,125,88,0.2)',
+    },
+    golden: {
+        name: 'Sunny', emoji: '🦊', line: "WHAT A YEAR, LET'S GOOO",
+        bg: ['#FFF9EA', '#FFF3D6', '#F0CE85'],
+        text: '#4A3018', muted: '#A0805A', accent: '#C2801A', panel: 'rgba(255,255,255,0.6)', divider: 'rgba(194,128,26,0.2)',
+    },
+};
+
+let _wrappedData = null;
+let _cardBlob = null;
+
+function loadImage(url) {
+    return new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous'; // keeps the canvas exportable; covers without CORS just fall back
+        const timer = setTimeout(() => resolve(null), 5000);
+        img.onload = () => { clearTimeout(timer); resolve(img.naturalWidth > 1 ? img : null); };
+        img.onerror = () => { clearTimeout(timer); resolve(null); };
+        img.src = url;
+    });
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+}
+
+// Shrinks the font until the text fits maxWidth
+function fitFont(ctx, text, maxWidth, size, tpl) {
+    do { ctx.font = tpl(size); size -= 2; } while (ctx.measureText(text).width > maxWidth && size > 12);
+}
+
+function wrapLines(ctx, text, maxWidth, maxLines) {
+    const words = text.split(' ');
+    const lines = [];
+    let line = '';
+    for (const w of words) {
+        const test = line ? `${line} ${w}` : w;
+        if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = w; }
+        else line = test;
+    }
+    if (line) lines.push(line);
+    if (lines.length > maxLines) {
+        lines.length = maxLines;
+        let last = lines[maxLines - 1];
+        while (ctx.measureText(last + '…').width > maxWidth && last.length > 1) last = last.slice(0, -1);
+        lines[maxLines - 1] = last + '…';
+    }
+    return lines;
+}
+
+function setSpacing(ctx, px) { if ('letterSpacing' in ctx) ctx.letterSpacing = `${px}px`; }
+
+async function drawWrappedCard(data, themeKey, nickname, scale) {
+    const t = CARD_THEMES[themeKey] || CARD_THEMES.cottage;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(CARD_W * scale);
+    canvas.height = Math.round(CARD_H * scale);
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    await Promise.all([
+        document.fonts.load('700 96px "Playfair Display"'),
+        document.fonts.load('italic 400 96px "Playfair Display"'),
+        document.fonts.load('800 30px Nunito'),
+        document.fonts.load('600 30px Nunito'),
+    ]).catch(() => {});
+
+    const covers = await Promise.all(data.topRated.map(async b => {
+        const url = await getCoverUrl(b);
+        return url ? loadImage(url) : null;
+    }));
+
+    const PAD = 90, INNER = CARD_W - PAD * 2;
+    const serif = (w, s, it = '') => `${it}${w} ${s}px "Playfair Display", Georgia, serif`;
+    const sans = (w, s) => `${w} ${s}px Nunito, Arial, sans-serif`;
+
+    // Background
+    const grad = ctx.createLinearGradient(0, 0, CARD_W * 0.4, CARD_H);
+    grad.addColorStop(0, t.bg[0]); grad.addColorStop(0.5, t.bg[1]); grad.addColorStop(1, t.bg[2]);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+    // Soft sparkles
+    ctx.fillStyle = t.accent;
+    ctx.globalAlpha = 0.18;
+    [[130, 110, 10], [960, 190, 14], [990, 760, 8], [70, 1290, 12], [1010, 1500, 10]].forEach(([x, y, r]) => {
+        ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+    ctx.textBaseline = 'alphabetic';
+
+    // Header
+    ctx.textAlign = 'center';
+    ctx.fillStyle = t.accent;
+    ctx.font = sans(800, 30);
+    setSpacing(ctx, 6);
+    ctx.fillText(`MOCHI ✦ READING WRAPPED ${data.year}`, CARD_W / 2, 170);
+    setSpacing(ctx, 0);
+
+    ctx.fillStyle = t.text;
+    const owner = nickname ? `${nickname}'s` : 'My';
+    fitFont(ctx, owner, INNER, 92, s => serif(700, s));
+    ctx.fillText(owner, CARD_W / 2, 300);
+    ctx.fillStyle = t.accent;
+    ctx.font = serif(400, 104, 'italic ');
+    ctx.fillText('year in books.', CARD_W / 2, 410);
+
+    // Big numbers
+    const stats = [{ val: data.totalBooks, label: 'BOOKS' }];
+    if (data.totalPages > 0) stats.push({ val: data.totalPages, label: 'PAGES' });
+    roundRect(ctx, PAD, 480, INNER, 270, 36);
+    ctx.fillStyle = t.panel; ctx.fill();
+    stats.forEach((s, i) => {
+        const cx = PAD + INNER * (i + 0.5) / stats.length;
+        ctx.fillStyle = t.accent;
+        fitFont(ctx, s.val.toLocaleString(), INNER / stats.length - 60, 150, sz => serif(700, sz));
+        ctx.fillText(s.val.toLocaleString(), cx, 660);
+        ctx.fillStyle = t.muted;
+        ctx.font = sans(800, 26);
+        setSpacing(ctx, 4);
+        ctx.fillText(s.label, cx, 710);
+        setSpacing(ctx, 0);
+    });
+
+    // Top reads
+    ctx.fillStyle = t.muted;
+    ctx.font = sans(800, 26);
+    setSpacing(ctx, 4);
+    ctx.fillText(data.hasAllFiveStars ? '5-STAR READS' : 'TOP READS', CARD_W / 2, 830);
+    setSpacing(ctx, 0);
+
+    const CW = 240, CH = 360, GAP = 50;
+    const n = data.topRated.length;
+    const startX = (CARD_W - (n * CW + (n - 1) * GAP)) / 2;
+    data.topRated.forEach((book, i) => {
+        const x = startX + i * (CW + GAP), y = 870;
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.22)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 12;
+        roundRect(ctx, x, y, CW, CH, 16);
+        ctx.fillStyle = book.fallbackColor || t.accent;
+        ctx.fill();
+        ctx.restore();
+
+        ctx.save();
+        roundRect(ctx, x, y, CW, CH, 16);
+        ctx.clip();
+        const img = covers[i];
+        if (img) {
+            // object-fit: cover
+            const r = Math.max(CW / img.naturalWidth, CH / img.naturalHeight);
+            const w = img.naturalWidth * r, h = img.naturalHeight * r;
+            ctx.drawImage(img, x + (CW - w) / 2, y + (CH - h) / 2, w, h);
+        } else {
+            ctx.fillStyle = '#fff';
+            ctx.font = serif(700, 30);
+            const lines = wrapLines(ctx, book.title, CW - 40, 5);
+            const top = y + CH / 2 - (lines.length - 1) * 19;
+            lines.forEach((l, j) => ctx.fillText(l, x + CW / 2, top + j * 38));
+        }
+        ctx.restore();
+
+        ctx.fillStyle = t.accent;
+        ctx.font = sans(800, 30);
+        ctx.fillText('★'.repeat(book.rating || 0), x + CW / 2, y + CH + 50);
+    });
+
+    // Highlights
+    const rows = [];
+    const bestCount = data.byMonth[data.bestMonthIdx].length;
+    if (bestCount > 0) rows.push(['Best month', MONTH_FULL[data.bestMonthIdx]]);
+    rows.push(['Fave author', data.favAuthor]);
+    if (data.vibe.word !== data.personality.type) rows.push(['Top vibe', data.vibe.word]);
+    rows.push(['Reader type', data.personality.type]);
+
+    const ROW_H = 84, panelY = 1340;
+    roundRect(ctx, PAD, panelY, INNER, rows.length * ROW_H + 30, 36);
+    ctx.fillStyle = t.panel; ctx.fill();
+    rows.forEach(([label, value], i) => {
+        const y = panelY + 15 + i * ROW_H + ROW_H / 2 + 11;
+        ctx.textAlign = 'left';
+        ctx.fillStyle = t.muted;
+        ctx.font = sans(600, 30);
+        ctx.fillText(label, PAD + 44, y);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = t.text;
+        fitFont(ctx, value, INNER - 360, 34, s => sans(800, s));
+        ctx.fillText(value, PAD + INNER - 44, y);
+        if (i < rows.length - 1) {
+            ctx.fillStyle = t.divider;
+            ctx.fillRect(PAD + 44, panelY + 15 + (i + 1) * ROW_H, INNER - 88, 2);
+        }
+    });
+
+    // Companion sign-off + footer
+    ctx.textAlign = 'center';
+    ctx.fillStyle = t.text;
+    ctx.font = serif(400, 40, 'italic ');
+    ctx.fillText(`${t.emoji} ${t.name}: “${t.line}”`, CARD_W / 2, 1790);
+    ctx.fillStyle = t.muted;
+    ctx.font = sans(700, 26);
+    setSpacing(ctx, 2);
+    ctx.fillText('readwithmochi.github.io/Mochi', CARD_W / 2, 1860);
+    setSpacing(ctx, 0);
+
+    return canvas;
+}
+
+async function openCardModal() {
+    const modal = document.getElementById('cardModal');
+    const img = document.getElementById('cardPreview');
+    const loading = document.getElementById('cardLoading');
+    const actions = document.getElementById('cardActions');
+    const isPro = window.mochiIsPremium();
+
+    modal.classList.add('show');
+    img.hidden = true; actions.hidden = true; loading.hidden = false;
+    _cardBlob = null;
+
+    const user = window.mochiGetUser();
+    const nickname = user?.user_metadata?.nickname || (user?.email ? user.email.split('@')[0] : null);
+    const theme = isPro ? window.mochiGetRoomTheme() : 'cottage';
+
+    try {
+        // Everyone gets the card (more shares = more people finding Mochi); Pro gets their companion's colours
+        const canvas = await drawWrappedCard(_wrappedData, theme, nickname, 1);
+        img.src = canvas.toDataURL('image/png');
+        img.hidden = false;
+        _cardBlob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+        actions.hidden = false;
+        document.getElementById('cardUpsell').hidden = isPro;
+    } catch (err) {
+        console.error('Wrapped card failed', err);
+        loading.textContent = "Couldn't wrap your card. Try again? 🥺";
+        return;
+    }
+    loading.hidden = true;
+}
+
+function cardFileName() { return `mochi-wrapped-${_wrappedData.year}.png`; }
+
+function saveCard() {
+    if (!_cardBlob) return;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(_cardBlob);
+    a.download = cardFileName();
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+async function shareCard() {
+    if (!_cardBlob) return;
+    const file = new File([_cardBlob], cardFileName(), { type: 'image/png' });
+    if (navigator.canShare?.({ files: [file] })) {
+        try {
+            await navigator.share({ files: [file], title: `My ${_wrappedData.year} Reading Wrapped`, text: '#MochiReads #BookTok' });
+        } catch (_) {}
+        return;
+    }
+    saveCard(); // desktop browsers usually can't share files — download instead
+}
+
+function setupCard(data) {
+    _wrappedData = data;
+    document.getElementById('cardBtn').addEventListener('click', openCardModal);
+    document.getElementById('cardSaveBtn').addEventListener('click', saveCard);
+    document.getElementById('cardShareBtn').addEventListener('click', shareCard);
+    const modal = document.getElementById('cardModal');
+    document.getElementById('cardClose').addEventListener('click', () => modal.classList.remove('show'));
+    modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('show'); });
 }
 
 // ──────────────────────────────────────────
@@ -1085,6 +1479,7 @@ function init() {
     }
 
     render(data);
+    setupCard(data);
     setupScrollObserver(['s1','s2','s3','s4','s5','s6','s7','s8']);
 }
 

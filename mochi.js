@@ -281,6 +281,21 @@
                 font-family: 'Nunito', sans-serif; transition: all 0.2s;
             }
             .mochi-signout-btn:hover { background: #FAE8EF; color: #C97A8E; }
+
+            /* Phones: 6 nav links don't fit — keep the bunny, let the links swipe sideways */
+            @media (max-width: 640px) {
+                header { gap: 10px; }
+                header .logo-wordmark { display: none; }
+                header nav {
+                    flex: 1; min-width: 0;
+                    overflow-x: auto; flex-wrap: nowrap;
+                    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+                    -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent);
+                            mask-image: linear-gradient(90deg, #000 85%, transparent);
+                }
+                header nav::-webkit-scrollbar { display: none; }
+                header nav a { white-space: nowrap; flex-shrink: 0; }
+            }
         `;
         document.head.appendChild(s);
     }
@@ -400,11 +415,18 @@
     // ── Account link in nav (skips if already there) ─
     function _injectSignOut() {
         const nav = document.querySelector('nav');
-        if (!nav || nav.querySelector('a[href="account.html"]')) return;
-        const link = document.createElement('a');
-        link.href = 'account.html';
-        link.textContent = 'Account';
-        nav.appendChild(link);
+        if (!nav) return;
+        if (!nav.querySelector('a[href="account.html"]')) {
+            const link = document.createElement('a');
+            link.href = 'account.html';
+            link.textContent = 'Account';
+            nav.appendChild(link);
+        }
+        // On phones the nav scrolls sideways — make sure the current page's link is visible
+        const active = nav.querySelector('a.active');
+        if (active && nav.scrollWidth > nav.clientWidth) {
+            nav.scrollLeft = active.offsetLeft - nav.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2;
+        }
     }
 
     // ── Notifications ──────────────────────────────

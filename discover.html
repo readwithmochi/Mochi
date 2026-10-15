@@ -634,15 +634,56 @@ const SCIFI_BOOKS = [
 
 const CATEGORIES = [
     { key: 'foryou',       label: '✨ For You',         type: 'foryou' },
-    { key: 'booktok',      label: '🔥 BookTok Picks',   type: 'curated', books: BOOKTOK_BOOKS,      fallbackQuery: 'booktok romance bestseller' },
-    { key: 'romance',      label: '💕 Romance',          type: 'curated', books: ROMANCE_BOOKS,      fallbackQuery: 'romance novel bestseller' },
-    { key: 'dark_romance', label: '🖤 Dark Romance',     type: 'curated', books: DARK_ROMANCE_BOOKS,  fallbackQuery: 'dark romance possessive love story' },
-    { key: 'thriller',     label: '🔪 Thriller',         type: 'curated', books: THRILLER_BOOKS,     fallbackQuery: 'psychological thriller suspense' },
-    { key: 'fantasy',      label: '✨ Fantasy',           type: 'curated', books: FANTASY_BOOKS,      fallbackQuery: 'epic fantasy magic bestseller' },
-    { key: 'contemporary', label: '🌸 Contemporary',     type: 'curated', books: CONTEMPORARY_BOOKS, fallbackQuery: 'contemporary literary fiction' },
-    { key: 'mystery',      label: '🕵️ Mystery',          type: 'curated', books: MYSTERY_BOOKS,      fallbackQuery: 'cozy mystery whodunit bestseller' },
-    { key: 'scifi',        label: '🚀 Sci-Fi',           type: 'curated', books: SCIFI_BOOKS,        fallbackQuery: 'science fiction bestseller award' },
+    { key: 'booktok',      label: '🔥 BookTok Picks',   type: 'curated', books: BOOKTOK_BOOKS },
+    { key: 'romance',      label: '💕 Romance',          type: 'curated', books: ROMANCE_BOOKS },
+    { key: 'dark_romance', label: '🖤 Dark Romance',     type: 'curated', books: DARK_ROMANCE_BOOKS },
+    { key: 'thriller',     label: '🔪 Thriller',         type: 'curated', books: THRILLER_BOOKS },
+    { key: 'fantasy',      label: '✨ Fantasy',           type: 'curated', books: FANTASY_BOOKS },
+    { key: 'contemporary', label: '🌸 Contemporary',     type: 'curated', books: CONTEMPORARY_BOOKS },
+    { key: 'ya',           label: '🎒 YA',               type: 'curated', books: YA_BOOKS },
+    { key: 'mystery',      label: '🕵️ Mystery',          type: 'curated', books: MYSTERY_BOOKS },
+    { key: 'scifi',        label: '🚀 Sci-Fi',           type: 'curated', books: SCIFI_BOOKS },
 ];
+
+// Pretty genre pills shown on cards (instead of Open Library's raw subjects)
+const GENRE_LABELS = {
+    booktok: '🔥 BookTok', romance: '💕 Romance', dark_romance: '🖤 Dark Romance',
+    thriller: '🔪 Thriller', fantasy: '✨ Fantasy', contemporary: '🌸 Contemporary',
+    ya: '🎒 YA', mystery: '🕵️ Mystery', scifi: '🚀 Sci-Fi',
+};
+
+const titleKey = t => t.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+
+// title → every curated genre it appears in
+const CURATED_GENRES = new Map();
+CATEGORIES.filter(c => c.type === 'curated').forEach(cat => cat.books.forEach(b => {
+    const k = titleKey(b.title);
+    if (!CURATED_GENRES.has(k)) CURATED_GENRES.set(k, []);
+    if (!CURATED_GENRES.get(k).includes(cat.key)) CURATED_GENRES.get(k).push(cat.key);
+}));
+
+// Maps Open Library subjects (search results) onto our genres; anything else is dropped
+const SUBJECT_TO_GENRE = [
+    [/dark romance/i, 'dark_romance'],
+    [/romance|love stories/i, 'romance'],
+    [/thriller|suspense/i, 'thriller'],
+    [/fantasy|magic/i, 'fantasy'],
+    [/mystery|detective/i, 'mystery'],
+    [/science fiction/i, 'scifi'],
+    [/young adult|juvenile fiction/i, 'ya'],
+];
+
+function genresFor(title, subjects = []) {
+    const curated = CURATED_GENRES.get(titleKey(title));
+    if (curated) return curated.slice(0, 2);
+    const found = [];
+    for (const [re, key] of SUBJECT_TO_GENRE) {
+        if (found.length < 2 && !found.includes(key) && subjects.some(s => re.test(s))) found.push(key);
+    }
+    return found;
+}
+
+const PAGE_SIZE = 12;
 
 const FALLBACK_COLORS = [
     'linear-gradient(145deg,#2C2C3E,#1A1A2E)',
@@ -698,70 +739,56 @@ function addToShelf(title, author, coverId, status) {
 // ──────────────────────────────────────────
 // Personalization algorithm
 // ──────────────────────────────────────────
-const GENRE_AFFINITY_MAPS = [
-    { key: 'romance',      books: ROMANCE_BOOKS,      query: 'romance novel bestseller' },
-    { key: 'dark_romance', books: DARK_ROMANCE_BOOKS,  query: 'dark romance possessive love story' },
-    { key: 'fantasy',      books: FANTASY_BOOKS,       query: 'epic fantasy magic bestseller' },
-    { key: 'thriller',     books: THRILLER_BOOKS,      query: 'psychological thriller suspense' },
-    { key: 'contemporary', books: CONTEMPORARY_BOOKS,  query: 'contemporary literary fiction' },
-    { key: 'ya',           books: YA_BOOKS,            query: 'young adult bestseller coming of age' },
-    { key: 'mystery',      books: MYSTERY_BOOKS,       query: 'cozy mystery whodunit bestseller' },
-    { key: 'scifi',        books: SCIFI_BOOKS,         query: 'science fiction bestseller award' },
-    { key: 'booktok',      books: BOOKTOK_BOOKS,       query: 'booktok romance bestseller' },
+// "For You" only ever recommends from the handpicked lists — no random search results.
+// Each book is scored by how well it matches the shelf, plus a small daily shuffle so it feels fresh.
+const TAG_TO_GENRE = [
+    [/dark/i, 'dark_romance'], [/romance|love|enemies|slow.?burn|spicy/i, 'romance'],
+    [/thriller|suspense|twist|crime/i, 'thriller'], [/fantasy|magic|fae|dragon/i, 'fantasy'],
+    [/mystery|whodunit/i, 'mystery'], [/sci.?fi|space|dystop/i, 'scifi'],
+    [/ya\b|young adult|teen/i, 'ya'], [/emotional|cry|literary/i, 'contemporary'],
 ];
 
-function buildForYouQueries() {
-    const books = window.mochiGetBooks();
-    if (!books.length) return ['romance fiction bestseller', 'fantasy novel popular', 'contemporary romance'];
+function dailyRandom(str) {
+    // Same number all day for the same book, different tomorrow
+    let h = 2166136261;
+    for (const c of new Date().toDateString() + str) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+    return ((h >>> 0) % 1000) / 1000;
+}
 
-    // Prefer high-rated read books, then all read books, then everything
-    const readBooks = books.filter(b => b.status === 'read');
-    const highRated = readBooks.filter(b => (b.rating || 0) >= 4);
-    const source = highRated.length ? highRated : readBooks.length ? readBooks : books;
+let _forYouList = null;
 
-    const shelfLower = new Set(source.map(b => b.title.toLowerCase().trim()));
+function buildForYouList() {
+    const shelf = window.mochiGetBooks();
+    const shelfTitles = new Set(shelf.map(b => titleKey(b.title)));
 
-    // Detect genre affinity: count how many shelf books appear in each curated list
-    const genreMatches = GENRE_AFFINITY_MAPS
-        .map(cat => ({
-            query: cat.query,
-            score: cat.books.filter(b => shelfLower.has(b.title.toLowerCase().trim())).length,
-        }))
-        .filter(g => g.score > 0)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3)
-        .map(g => g.query);
-
-    // Top authors — search directly by their name
-    const authorCounts = {};
-    source.forEach(b => {
-        if (b.author && b.author !== 'Unknown') {
-            authorCounts[b.author] = (authorCounts[b.author] || 0) + 1;
-        }
+    const genreScore = {};
+    const authorScore = {};
+    shelf.forEach(b => {
+        // Loved books count most, finished books more than wishlist
+        const w = b.status === 'read' ? ((b.rating || 0) >= 4 ? 3 : (b.rating && b.rating <= 2 ? 0 : 1.5))
+                : b.status === 'reading' ? 2 : 1;
+        (CURATED_GENRES.get(titleKey(b.title)) || []).forEach(g => { genreScore[g] = (genreScore[g] || 0) + w; });
+        (b.tags || []).forEach(t => {
+            const match = TAG_TO_GENRE.find(([re]) => re.test(t));
+            if (match) genreScore[match[1]] = (genreScore[match[1]] || 0) + w * 0.5;
+        });
+        if (b.author) authorScore[b.author.toLowerCase()] = (authorScore[b.author.toLowerCase()] || 0) + w;
     });
-    const topAuthors = Object.entries(authorCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 2)
-        .map(e => e[0]);
+    if (!Object.keys(genreScore).length) genreScore.booktok = 2; // empty shelf → start with what's trending
 
-    // Tags as a bonus signal (if user has tagged books)
-    const tagCounts = {};
-    source.forEach(b => (b.tags || []).forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
-    const topTags = Object.entries(tagCounts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 2)
-        .map(e => e[0]);
-
-    const queries = [];
-    queries.push(...genreMatches);
-    topAuthors.forEach(author => queries.push(`${author} fiction novel`));
-    topTags.forEach(tag => queries.push(`${tag} novel fiction`));
-
-    if (!queries.length) {
-        queries.push('romance bestseller', 'fantasy fiction', 'contemporary romance novel');
-    }
-
-    return queries;
+    const seen = new Set();
+    const pool = [];
+    CATEGORIES.filter(c => c.type === 'curated').forEach(cat => cat.books.forEach(b => {
+        const k = titleKey(b.title);
+        if (seen.has(k) || shelfTitles.has(k)) return;
+        seen.add(k);
+        const genres = CURATED_GENRES.get(k);
+        const score = (authorScore[b.author.toLowerCase()] || 0) * 2
+            + genres.reduce((s, g) => s + (genreScore[g] || 0), 0)
+            + dailyRandom(k) * 3;
+        pool.push({ ...b, score });
+    }));
+    return pool.sort((a, b) => b.score - a.score);
 }
 
 // ──────────────────────────────────────────
@@ -784,83 +811,56 @@ async function fetchSearch(query, page = 1) {
     const q = encodeURIComponent(query);
     const offset = (page - 1) * 20;
     const res = await fetch(
-        `https://openlibrary.org/search.json?q=${q}&limit=20&offset=${offset}&fields=title,author_name,cover_i,first_sentence,subject,key`
+        `https://openlibrary.org/search.json?q=${q}&limit=20&offset=${offset}&fields=title,author_name,cover_i,subject,key`
     );
     const data = await res.json();
-    return (data.docs || [])
-        .map(d => ({
-            title: d.title,
-            author: (d.author_name || ['Unknown'])[0],
-            coverId: d.cover_i || null,
-            blurb: cleanText(d.first_sentence?.value || ''),
-            subjects: (d.subject || []).slice(0, 3),
-            key: d.key || '',
-        }));
+    const books = (data.docs || []).map(d => ({
+        title: d.title,
+        author: (d.author_name || ['Unknown'])[0],
+        coverId: d.cover_i || null,
+        blurb: '', // filled lazily from the book's real description
+        genres: genresFor(d.title, d.subject || []),
+        key: d.key || '',
+    }));
+    // Books with a cover first — they look so much nicer in the grid
+    return [...books.filter(b => b.coverId), ...books.filter(b => !b.coverId)];
+}
+
+// Curated cards render instantly with title/author — cover + blurb are looked up per card
+function toCuratedCard(b) {
+    return {
+        title: b.title, author: b.author,
+        coverId: null, blurb: '', key: '',
+        genres: (CURATED_GENRES.get(titleKey(b.title)) || []).slice(0, 2),
+        needsLookup: true,
+    };
 }
 
 async function fetchCurated(cat, page = 1) {
-    const bookList = cat.books || [];
-    const pageSize = 12;
-    const start = (page - 1) * pageSize;
-
-    if (start < bookList.length) {
-        const batch = bookList.slice(start, start + pageSize);
-        // Render instantly with title/author only — cover/blurb are looked up
-        // per-card afterward so the grid doesn't wait on 12 network round trips.
-        return batch.map(b => ({
-            title: b.title, author: b.author,
-            coverId: null, blurb: '', subjects: [], key: '',
-            needsLookup: true,
-        }));
-    }
-
-    // Curated list exhausted — keep scrolling with a genre search
-    if (cat.fallbackQuery) {
-        const searchPage = Math.ceil((start - bookList.length) / pageSize) + 1;
-        return fetchSearch(cat.fallbackQuery, searchPage);
-    }
-    return [];
+    const start = (page - 1) * PAGE_SIZE;
+    return cat.books.slice(start, start + PAGE_SIZE).map(toCuratedCard);
 }
 
 async function lookupCuratedBook(title, author) {
     try {
-        const q = encodeURIComponent(`${title} ${author}`);
-        const res = await fetch(`https://openlibrary.org/search.json?q=${q}&limit=1&fields=cover_i,first_sentence,subject,key`);
+        // Searching title + author separately matches the right book far more often than one free-text query
+        // Give up after 8s so the card shows its coloured fallback instead of loading forever
+        const res = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}&limit=3&fields=cover_i,key`,
+            { signal: AbortSignal.timeout?.(8000) });
         const data = await res.json();
-        const doc = data.docs?.[0];
+        const docs = data.docs || [];
+        const doc = docs.find(d => d.cover_i) || docs[0];
         if (!doc) return null;
-        return {
-            coverId: doc.cover_i || null,
-            blurb: cleanText(doc.first_sentence?.value || ''),
-            subjects: (doc.subject || []).slice(0, 3),
-            key: doc.key || '',
-        };
+        return { coverId: doc.cover_i || null, key: doc.key || '' };
     } catch (_) {
         return null;
     }
 }
 
 async function fetchForYou(page = 1) {
-    const queries = buildForYouQueries();
-    const shelfTitles = new Set(window.mochiGetBooks().map(b => b.title.toLowerCase().trim()));
-
-    // Pull this page's slice from every personalized query and merge them,
-    // so one query overlapping heavily with the shelf can't starve the whole tab.
-    const batches = await Promise.all(queries.map(q => fetchSearch(q, page).catch(() => [])));
-    let results = batches.flat();
-
-    // If personalized queries returned nothing, fall back to generic
-    if (!results.length && page === 1) {
-        results = await fetchSearch('romance fiction bestseller', 1);
-    }
-
-    const seen = new Set();
-    return results.filter(b => {
-        const key = b.title.toLowerCase().trim();
-        if (shelfTitles.has(key) || seen.has(key)) return false;
-        seen.add(key);
-        return true;
-    });
+    if (page === 1 || !_forYouList) _forYouList = buildForYouList();
+    const start = (page - 1) * PAGE_SIZE;
+    return _forYouList.slice(start, start + PAGE_SIZE).map(toCuratedCard);
 }
 
 // Lazy-fetch description from Works API for a single book
@@ -912,6 +912,16 @@ function appendSkeletons(count = 6) {
 
 function safeText(el, text) { el.textContent = text; }
 
+function renderGenrePills(el, genres, className) {
+    el.innerHTML = '';
+    (genres || []).forEach(g => {
+        const span = document.createElement('span');
+        span.className = className;
+        span.textContent = GENRE_LABELS[g];
+        el.appendChild(span);
+    });
+}
+
 function createCard(book, onShelf, colorIdx) {
     const card = document.createElement('div');
     card.className = 'discover-card';
@@ -950,16 +960,7 @@ function createCard(book, onShelf, colorIdx) {
     safeText(card.querySelector('.disc-author'), book.author);
     if (book.blurb) safeText(card.querySelector('.disc-blurb'), book.blurb);
 
-    // Subjects — create elements instead of innerHTML
-    if (book.subjects?.length) {
-        const subjectsEl = card.querySelector('.disc-subjects');
-        book.subjects.slice(0, 2).forEach(s => {
-            const span = document.createElement('span');
-            span.className = 'disc-subject';
-            span.textContent = s;
-            subjectsEl.appendChild(span);
-        });
-    }
+    renderGenrePills(card.querySelector('.disc-subjects'), book.genres, 'disc-subject');
 
     // Load cover
     const img = card.querySelector('img');
@@ -989,8 +990,6 @@ function createCard(book, onShelf, colorIdx) {
         lookupCuratedBook(book.title, book.author).then(info => {
             if (!info) { loader.remove(); fallbackEl.style.display = 'flex'; return; }
             book.coverId = info.coverId;
-            book.blurb = info.blurb;
-            book.subjects = info.subjects;
             book.key = info.key;
             if (info.coverId) {
                 img.src = `https://covers.openlibrary.org/b/id/${info.coverId}-M.jpg`;
@@ -999,21 +998,10 @@ function createCard(book, onShelf, colorIdx) {
             } else {
                 loader.remove(); fallbackEl.style.display = 'flex';
             }
-            if (info.blurb) {
-                safeText(card.querySelector('.disc-blurb'), info.blurb);
-            } else if (info.key) {
+            if (info.key) {
                 fetchDescription(info.key).then(desc => {
                     const el = card.querySelector('.disc-blurb');
                     if (el && desc) el.textContent = desc;
-                });
-            }
-            if (info.subjects?.length) {
-                const subjectsEl = card.querySelector('.disc-subjects');
-                info.subjects.slice(0, 2).forEach(s => {
-                    const span = document.createElement('span');
-                    span.className = 'disc-subject';
-                    span.textContent = s;
-                    subjectsEl.appendChild(span);
                 });
             }
         });
@@ -1106,9 +1094,10 @@ async function loadPage(key, page, replace = false) {
             grid.innerHTML = emptyMsg;
             hasMore = false;
         } else {
-            hasMore = books.length >= 10;
+            hasMore = key === '__search__' ? books.length >= 10 : books.length >= PAGE_SIZE;
             appendBooks(books, totalCardsRendered);
             totalCardsRendered += books.length;
+            if (!hasMore && key !== '__search__') appendEndMessage();
         }
     } catch (_) {
         const spinner = document.getElementById('loadSpinner');
@@ -1119,6 +1108,14 @@ async function loadPage(key, page, replace = false) {
     }
 
     isLoading = false;
+}
+
+function appendEndMessage() {
+    const grid = document.getElementById('discoverGrid');
+    const end = document.createElement('div');
+    end.className = 'grid-message';
+    end.innerHTML = `<span class="msg-emoji">🐰</span><p>That's every book Mochi picked for this list ✨<br>Looking for something else? Use the search above!</p>`;
+    grid.appendChild(end);
 }
 
 function setupInfiniteScroll() {
@@ -1208,14 +1205,7 @@ function openBookModal(book) {
 
     document.getElementById('modalTitle').textContent = book.title;
     document.getElementById('modalAuthor').textContent = 'by ' + book.author;
-    const subjectsEl = document.getElementById('modalSubjects');
-    subjectsEl.innerHTML = '';
-    (book.subjects || []).slice(0, 4).forEach(s => {
-        const span = document.createElement('span');
-        span.className = 'modal-subject';
-        span.textContent = s;
-        subjectsEl.appendChild(span);
-    });
+    renderGenrePills(document.getElementById('modalSubjects'), book.genres, 'modal-subject');
 
     // Summary — use cached blurb first, then fetch full
     const summaryEl = document.getElementById('modalSummary');
