@@ -531,7 +531,8 @@
     }
 
     // ── Notifications ──────────────────────────────
-    const _VAPID_PUBLIC_KEY = 'BGQOH5JoGLOfqsBle0HhYYZAOfzfu4vFoOEN1OgYedb48wJgogUO_SrU7yZabr_Bz45KGgrvZrNnbhWz_4ciwtE';
+    // Rotated 2026-10-16 (old private key had leaked into the public repo)
+    const _VAPID_PUBLIC_KEY = 'BJfEl-P7ZUmtL0TM_N_j1Y7wM5wiPeXxdQyb3iwLAKSkeEai9ivUP5AIJBMgq3zTxyX7cT20BsnFyY2MaSJqwOQ';
 
     function _urlB64ToUint8(base64) {
         const padding = '='.repeat((4 - base64.length % 4) % 4);
@@ -540,19 +541,31 @@
         return Uint8Array.from(raw, c => c.charCodeAt(0));
     }
 
+    // A subscription made with an older key can't receive pushes anymore — throw it away
+    async function _currentSubscription(reg) {
+        const sub = await reg.pushManager.getSubscription();
+        if (!sub) return null;
+        const key = sub.options?.applicationServerKey;
+        const current = _urlB64ToUint8(_VAPID_PUBLIC_KEY);
+        const same = key && new Uint8Array(key).every((b, i) => b === current[i]) && key.byteLength === current.length;
+        if (same) return sub;
+        await sub.unsubscribe().catch(() => {});
+        return null;
+    }
+
     window.mochiGetNotificationStatus = async () => {
         if (!('Notification' in window) || !('PushManager' in window)) return 'unsupported';
         if (Notification.permission === 'denied') return 'denied';
         if (Notification.permission !== 'granted') return 'off';
         const reg = await navigator.serviceWorker.ready;
-        const sub = await reg.pushManager.getSubscription();
-        return sub ? 'on' : 'off';
+        return (await _currentSubscription(reg)) ? 'on' : 'off';
     };
 
     window.mochiEnableNotifications = async () => {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') return false;
         const reg = await navigator.serviceWorker.ready;
+        await _currentSubscription(reg); // clears an old-key subscription so subscribe() doesn't fail
         const sub = await reg.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: _urlB64ToUint8(_VAPID_PUBLIC_KEY)

@@ -17,7 +17,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import webpush from "https://esm.sh/web-push@3.6.7";
 
-const VAPID_PUBLIC_KEY = "BGQOH5JoGLOfqsBle0HhYYZAOfzfu4vFoOEN1OgYedb48wJgogUO_SrU7yZabr_Bz45KGgrvZrNnbhWz_4ciwtE";
+const VAPID_PUBLIC_KEY = "BJfEl-P7ZUmtL0TM_N_j1Y7wM5wiPeXxdQyb3iwLAKSkeEai9ivUP5AIJBMgq3zTxyX7cT20BsnFyY2MaSJqwOQ";
 const VAPID_PRIVATE_KEY = Deno.env.get("VAPID_PRIVATE_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
