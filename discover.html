@@ -1323,10 +1323,11 @@ async function loadPage(key, page, replace = false) {
         if (replace) grid.innerHTML = '';
 
         if (!books.length && page === 1) {
-            const emptyMsg = key === '__search__'
-                ? `<div class="grid-message"><span class="msg-emoji">🔍</span><p>No books found for "${searchQuery}". Try a different title or author!</p></div>`
-                : `<div class="grid-message"><span class="msg-emoji">😢</span><p>Couldn't load books right now. Try another category!</p></div>`;
-            grid.innerHTML = emptyMsg;
+            grid.innerHTML = '<div class="grid-message"><span class="msg-emoji"></span><p></p></div>';
+            grid.querySelector('.msg-emoji').textContent = key === '__search__' ? '🔍' : '😢';
+            grid.querySelector('p').textContent = key === '__search__'
+                ? `No books found for "${searchQuery}". Try a different title or author!`
+                : "Couldn't load books right now. Try another category!";
             hasMore = false;
         } else {
             hasMore = key === '__search__' ? books.length >= 10 : books.length >= PAGE_SIZE;
@@ -1435,12 +1436,21 @@ function openBookModal(book) {
     const onShelf = isOnShelf(book.title, book.author);
 
     // Cover
+    // Titles come from Open Library (outside data) — build elements instead of HTML strings
     const coverEl = document.getElementById('modalCover');
+    coverEl.innerHTML = '';
     if (book.coverId) {
-        coverEl.innerHTML = `<img src="https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg" alt="${book.title}" onerror="this.style.display='none'">`;
+        const img = document.createElement('img');
+        img.src = `https://covers.openlibrary.org/b/id/${encodeURIComponent(book.coverId)}-M.jpg`;
+        img.alt = book.title;
+        img.onerror = () => { img.style.display = 'none'; };
+        coverEl.appendChild(img);
     } else {
-        const fallback = FALLBACK_COLORS[Math.floor(Math.random() * FALLBACK_COLORS.length)];
-        coverEl.innerHTML = `<div class="modal-cover-fallback" style="background:${fallback}">${book.title}</div>`;
+        const fb = document.createElement('div');
+        fb.className = 'modal-cover-fallback';
+        fb.style.background = FALLBACK_COLORS[Math.floor(Math.random() * FALLBACK_COLORS.length)];
+        fb.textContent = book.title;
+        coverEl.appendChild(fb);
     }
 
     document.getElementById('modalTitle').textContent = book.title;

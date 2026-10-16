@@ -214,7 +214,7 @@
             <div class="profile-nickname" id="profileNickname">Loading...</div>
             <div class="profile-email" id="profileEmail"></div>
             <div class="profile-since" id="profileSince"></div>
-            <span class="plan-chip">Free</span>
+            <span class="plan-chip" id="planChip">Free</span>
         </div>
     </div>
 
@@ -236,19 +236,20 @@
             <label class="field-label">Email</label>
             <input class="field-input" type="email" id="emailDisplay" disabled>
         </div>
-        <p class="field-note">To change your email, reach out to us 🌸</p>
+        <p class="field-note">To change your email, write to <a id="contactLink" href="#" style="color:var(--pink-deep);font-weight:700"></a> 🌸</p>
     </div>
 
     <!-- Plan -->
     <div class="account-section">
         <div class="section-label">Your Plan</div>
         <div class="plan-box">
-            <span class="plan-icon">🐰</span>
+            <span class="plan-icon" id="planIcon">🐰</span>
             <div>
-                <div class="plan-name">Free plan</div>
-                <div class="plan-desc">Premium pets with unique personalities are on their way.<br>You'll be the first to know ✨</div>
+                <div class="plan-name" id="planName">Free plan</div>
+                <div class="plan-desc" id="planDesc">Mochi the Bunny keeps you company. Luna, Theo and Sunny are waiting in Mochi Pro ✨</div>
             </div>
         </div>
+        <p class="field-note" id="planNote" style="margin-top:12px"></p>
     </div>
 
     <!-- Sign out -->
@@ -257,7 +258,7 @@
     <!-- Danger zone -->
     <div class="danger-section">
         <div class="danger-label">Danger Zone</div>
-        <div class="danger-desc">Deleting your account removes all your books and data permanently. This cannot be undone.</div>
+        <div class="danger-desc">Deleting your account removes your books, your notifications and your login permanently, and cancels Mochi Pro if you have it. This cannot be undone.</div>
         <button class="btn-danger" id="deleteAccountBtn">Delete my account</button>
     </div>
 
@@ -279,6 +280,28 @@ function init() {
     document.getElementById('profileSince').textContent = 'Member since ' + since;
     document.getElementById('nicknameInput').value = nickname;
     document.getElementById('emailDisplay').value = email;
+
+    const contact = document.getElementById('contactLink');
+    contact.textContent = window.mochiContactEmail;
+    contact.href = 'mailto:' + window.mochiContactEmail;
+
+    // Plan: shows Pro for real (webhook-set) Pro, with a cancel link once payments are live
+    const isPro = window.mochiIsPremium();
+    const companion = window.mochiGetCompanion();
+    document.getElementById('planChip').textContent = isPro ? '✦ Pro' : 'Free';
+    document.getElementById('planIcon').textContent = isPro ? companion.emoji : '🐰';
+    document.getElementById('planName').textContent = isPro ? 'Mochi Pro ✦' : 'Free plan';
+    document.getElementById('planDesc').textContent = isPro
+        ? `${companion.name} is keeping you company. Switch companions any time on My Pet 🐾`
+        : 'Mochi the Bunny keeps you company. Luna, Theo and Sunny are waiting in Mochi Pro ✨';
+    const note = document.getElementById('planNote');
+    const manageUrl = isPro && window.mochiPaymentsLive() ? window.mochiManageSubscriptionUrl() : null;
+    if (manageUrl) {
+        note.innerHTML = 'Need to change or cancel your plan? <a target="_blank" rel="noopener" style="color:var(--pink-deep);font-weight:700">Manage subscription</a>';
+        note.querySelector('a').href = manageUrl;
+    } else if (!isPro) {
+        note.innerHTML = '<a href="premium.html" style="color:var(--pink-deep);font-weight:700">See what Mochi Pro unlocks →</a>';
+    }
 
     // Save nickname
     document.getElementById('saveNicknameBtn').addEventListener('click', async () => {
@@ -307,7 +330,7 @@ function init() {
 
     // Delete account
     document.getElementById('deleteAccountBtn').addEventListener('click', async () => {
-        const confirmed = confirm('Are you sure? This deletes all your books and cannot be undone.');
+        const confirmed = confirm('Are you sure? This deletes your account, all your books and cancels Mochi Pro. It cannot be undone.');
         if (!confirmed) return;
         const btn = document.getElementById('deleteAccountBtn');
         btn.disabled = true;
@@ -315,10 +338,10 @@ function init() {
         try {
             await window.mochiDeleteAccount();
             window.location.href = 'index.html';
-        } catch (_) {
+        } catch (err) {
             btn.disabled = false;
             btn.textContent = 'Delete my account';
-            alert('Something went wrong. Please try again.');
+            alert(`Something went wrong: ${err.message || err}\n\nPlease try again, or write to ${window.mochiContactEmail} and we'll delete it for you.`);
         }
     });
 }

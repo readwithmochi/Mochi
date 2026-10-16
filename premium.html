@@ -290,7 +290,7 @@
     <div class="hero">
         <span class="hero-badge">✦ Mochi Pro</span>
         <h1>Make your cozy world <em>even cozier.</em></h1>
-        <p>Free already feels like your own cozy little world. Pro is where it turns into a whole universe — new companions, deeper stats, and a year-end story worth sharing.</p>
+        <p>Free already feels like your own cozy little world. Pro is where it turns into a whole universe — three new companions with their own rooms, voices and moods, and a Wrapped card in their colours.</p>
         <div class="status-banner" id="statusBanner"></div>
     </div>
 
@@ -356,26 +356,24 @@
             <div class="compare-col">
                 <div class="compare-col-title">Always free</div>
                 <ul class="compare-list">
-                    <li>Unlimited book tracking</li>
-                    <li>Grid layout & card design</li>
-                    <li>3 cozy colour themes</li>
-                    <li>Mochi the Bunny, your starter companion</li>
-                    <li>1 yearly reading goal</li>
-                    <li>Reviews & star ratings</li>
-                    <li>1 photo per book</li>
+                    <li>Unlimited book tracking with covers you pick yourself</li>
+                    <li>Mochi the Bunny and her cottage room, with her own moods</li>
+                    <li>Yearly reading goal & reading streak</li>
+                    <li>Ratings, reviews, tags, quotes & page progress</li>
+                    <li>Discover with a "For You" list based on your shelf</li>
+                    <li>Reading Wrapped & a shareable Wrapped card in Mochi pink</li>
+                    <li>Reading reminders on your phone</li>
                 </ul>
             </div>
             <div class="compare-col pro">
                 <div class="compare-col-title pro">✦ Mochi Pro</div>
                 <ul class="compare-list">
-                    <li>Full companion collection — Luna, Theo & Sunny, with animated reactions</li>
+                    <li>Luna, Theo & Sunny — each with their own room, voice and mood animations</li>
+                    <li>Your companion's colours across the whole app</li>
                     <li>Companion levelling — surprises at reading milestones</li>
-                    <li>All themes + seasonal limited editions</li>
-                    <li>Custom fonts & card layouts</li>
-                    <li>Unlimited photos per book</li>
-                    <li>Detailed stats — pages/day, genre breakdown, streaks</li>
-                    <li>Reading Wrapped — a shareable year-end story</li>
-                    <li>Full library PDF export</li>
+                    <li>Your Wrapped card in your companion's colours</li>
+                    <li><em>Coming next:</em> detailed stats — pages per day, genres, streaks</li>
+                    <li><em>Coming later:</em> seasonal rooms, photos per book, fonts & layouts, PDF export</li>
                 </ul>
             </div>
         </div>
@@ -406,7 +404,7 @@
     </div>
 
     <div class="prototype-note" id="prototypeNote">
-        🔧 Prototype note: this page shows where Mochi Pro is headed. Today, clicking "Upgrade" instantly unlocks the part that's actually built — switching to Luna, Theo or Sunny with their own room and dialogue. Levelling, seasonal themes, photo uploads, detailed stats, Wrapped export and PDF export are on the roadmap, not live yet. No real payment is connected either — this is just testing the concept.
+        🔧 Prototype note: no real payment is connected yet. Clicking "Upgrade" instantly unlocks Mochi Pro for testing — Luna, Theo and Sunny with their rooms, levelling and the Wrapped card in their colours. The "coming" items above are on the roadmap, not live yet.
     </div>
 
 </div>
@@ -475,7 +473,7 @@ async function waitForPro() {
         refreshStatus();
         banner.textContent = '🎉 Welcome to Mochi Pro! Go meet Luna, Theo and Sunny on My Pet.';
     } else {
-        banner.textContent = "Payment received, but Pro isn't on yet. Refresh in a minute — if it's still off, email us and we'll fix it right away.";
+        banner.textContent = `Payment received, but Pro isn't on yet. Refresh in a minute — if it's still off, email ${window.mochiContactEmail} and we'll fix it right away.`;
     }
 }
 

@@ -123,10 +123,21 @@
         _user = data.user;
     };
 
+    // The browser can't delete its own account — the delete-account Edge Function does it
+    // (cancels Mochi Pro in Stripe, deletes books + push subscription, then the account itself)
     window.mochiDeleteAccount = async () => {
-        await _sb.from('books').delete().eq('user_id', _user.id);
-        await _sb.auth.signOut();
+        const { data, error } = await _sb.functions.invoke('delete-account', { method: 'POST' });
+        if (error) {
+            let msg = error.message || 'Could not delete your account.';
+            try { const body = await error.context?.json(); if (body?.error) msg = body.error; } catch (_) {}
+            throw new Error(msg);
+        }
+        if (!data?.deleted) throw new Error('Could not delete your account.');
+        try { localStorage.removeItem('mochi-companion'); } catch (_) {}
+        await _sb.auth.signOut().catch(() => {});
     };
+
+    window.mochiContactEmail = 'readwithmochi@gmail.com';
 
     window.mochiGetGoal = () => {
         const year = new Date().getFullYear();
