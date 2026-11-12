@@ -891,6 +891,36 @@
             font-size: 0.78rem; color: var(--text-muted); margin-top: 8px;
         }
 
+        /* ── Reading stats (Mochi Pro) ── */
+        .reading-stats { margin-top: 14px; position: relative; display: grid; gap: 12px; }
+        .reading-stats.locked { cursor: pointer; }
+        .reading-stats.locked > * { opacity: 0.45; filter: saturate(0.6); pointer-events: none; }
+        .reading-stats .stats-lock {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 2;
+            opacity: 1 !important; filter: none !important;
+            background: var(--surface); border: 1.5px solid var(--pink-light); border-radius: 100px;
+            padding: 10px 18px; font-size: 0.82rem; font-weight: 800; color: var(--pink-deep);
+            box-shadow: 0 8px 24px rgba(74,48,64,0.12); display: none; white-space: nowrap;
+        }
+        .reading-stats.locked .stats-lock { display: block; }
+        .rs-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; color: var(--text); }
+        .rs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+        .rs-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+        .rs-panel { background: var(--surface); border: 1.5px solid var(--border); border-radius: 18px; padding: 16px; min-width: 0; }
+        .rs-chart { display: grid; grid-template-columns: repeat(30, 1fr); gap: 2px; align-items: end; height: 76px; margin-top: 12px; }
+        .rs-chart div { background: var(--pink); border-radius: 2px 2px 0 0; min-height: 2px; }
+        .rs-chart div.zero { background: var(--pink-light); opacity: 0.6; }
+        .rs-chart div.best { background: var(--pink-deep); }
+        .rs-axis { display: flex; justify-content: space-between; font-size: 0.62rem; color: var(--text-muted); font-weight: 700; margin-top: 6px; }
+        .rs-genres { display: grid; gap: 8px; margin-top: 10px; }
+        .rs-genre { display: grid; grid-template-columns: minmax(96px, 125px) 1fr 40px; gap: 8px; align-items: center; font-size: 0.76rem; font-weight: 700; color: var(--text); }
+        .rs-genre .track { height: 9px; background: var(--pink-soft); border-radius: 100px; overflow: hidden; border: 1px solid var(--border); }
+        .rs-genre .fill { height: 100%; background: linear-gradient(90deg, var(--pink), var(--pink-deep)); border-radius: 100px; }
+        .rs-genre .pct { text-align: right; color: var(--pink-deep); font-variant-numeric: tabular-nums; }
+        .rs-empty { font-size: 0.78rem; color: var(--text-muted); margin-top: 10px; }
+        .rs-voice { background: var(--pink-soft); border-radius: 14px; padding: 10px 14px; font-size: 0.78rem; color: var(--text-muted); }
+        .rs-voice strong { color: var(--text); }
+
         /* ── Level-up surprise toast ── */
         .level-up-toast {
             position: fixed; top: 24px; left: 50%;
@@ -1175,6 +1205,46 @@
             <div class="level-card-sub" id="levelSub">—</div>
         </div>
 
+    </div>
+
+    <!-- ── Reading stats (Mochi Pro) ── -->
+    <div class="reading-stats" id="readingStats">
+        <div class="stats-lock" id="statsLock">🔒 Reading stats are Mochi Pro ✦</div>
+        <div class="rs-title" id="rsTitle">Reading stats</div>
+        <div class="rs-grid">
+            <div class="stat-card">
+                <div class="stat-card-label">Pages this month</div>
+                <div class="stat-card-value" id="rsMonth">—</div>
+                <div class="stat-card-sub" id="rsMonthSub"></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Longest streak</div>
+                <div class="stat-card-value" id="rsStreak">—</div>
+                <div class="stat-card-sub" id="rsStreakSub"></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Best day</div>
+                <div class="stat-card-value" id="rsBest">—</div>
+                <div class="stat-card-sub" id="rsBestSub"></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-label">Finish pace</div>
+                <div class="stat-card-value" id="rsPace">—</div>
+                <div class="stat-card-sub" id="rsPaceSub"></div>
+            </div>
+        </div>
+        <div class="rs-two">
+            <div class="rs-panel">
+                <div class="stat-card-label">Last 30 days · pages</div>
+                <div class="rs-chart" id="rsChart"></div>
+                <div class="rs-axis"><span id="rsAxisFrom"></span><span>today</span></div>
+            </div>
+            <div class="rs-panel">
+                <div class="stat-card-label">Your genres this year</div>
+                <div class="rs-genres" id="rsGenres"></div>
+            </div>
+        </div>
+        <div class="rs-voice"><strong id="rsVoiceName">Mochi says...</strong> <span id="rsVoiceLine"></span></div>
     </div>
 
     <!-- ── Companion picker ── -->
@@ -1607,6 +1677,87 @@ function renderLevel(books, companion, name) {
     checkLevelMilestone(companion, name, info);
 }
 
+// ── Reading stats (Mochi Pro) ──
+const STATS_VOICE = {
+    cottage:  { good: a => `${a} pages a day? You're glowing 🌸`, some: a => `${a} pages a day. Cozy pace, I love it 📖`, none: "Log a few pages on your shelf and I'll do the maths 🧁" },
+    lavender: { good: a => `${a} pages a day. unhinged. respect 🖤`, some: a => `${a} a day. slow burn. fitting.`, none: 'no data. tragic. go read something.' },
+    sage:     { good: a => `${a} a day. solid. tea? 🍵`, some: a => `${a} a day. steady. nice.`, none: "nothing logged yet. no stress." },
+    golden:   { good: a => `${a} PAGES A DAY?? CHAMPION 🏆`, some: a => `${a} a day, let's push it higher!! ⭐`, none: 'LOG PAGES AND WATCH THIS LIGHT UP ⭐' },
+};
+const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fmtDay = key => { const [, m, d] = key.split('-').map(Number); return `${d} ${MONTHS_SHORT[m - 1]}`; };
+
+function renderReadingStats(books, companion, name) {
+    const wrap = document.getElementById('readingStats');
+    const isPremium = window.mochiIsPremium();
+    wrap.classList.toggle('locked', !isPremium);
+    wrap.onclick = isPremium ? null : () => { window.location.href = 'premium.html'; };
+    document.getElementById('rsTitle').textContent = isPremium ? `${name}'s reading stats` : 'Reading stats';
+
+    const days = window.mochiReadingDays();
+    const today = window.mochiDayKey(Date.now());
+    const monthPrefix = today.slice(0, 7);
+    const monthPages = Object.keys(days).filter(k => k.startsWith(monthPrefix)).reduce((s, k) => s + days[k], 0);
+    const avg = monthPages ? Math.round(monthPages / new Date().getDate()) : 0;
+    const streaks = window.mochiStreaks(days);
+    let bestKey = null;
+    Object.keys(days).forEach(k => { if (!bestKey || days[k] > days[bestKey]) bestKey = k; });
+    const finished = books.filter(b => b.status === 'read' && b.dateStarted && b.dateFinished && b.dateFinished >= b.dateStarted);
+    const pace = finished.length ? Math.round(finished.reduce((s, b) => s + (b.dateFinished - b.dateStarted) / 86400000 + 1, 0) / finished.length) : null;
+
+    document.getElementById('rsMonth').textContent = monthPages.toLocaleString();
+    document.getElementById('rsMonthSub').textContent = monthPages ? `about ${avg} a day` : 'nothing logged yet';
+    document.getElementById('rsStreak').textContent = streaks.longest ? `${streaks.longest} day${streaks.longest === 1 ? '' : 's'}` : '—';
+    document.getElementById('rsStreakSub').textContent = streaks.current ? `current streak: ${streaks.current}` : 'start one today';
+    document.getElementById('rsBest').textContent = bestKey ? days[bestKey].toLocaleString() : '—';
+    document.getElementById('rsBestSub').textContent = bestKey ? `pages on ${fmtDay(bestKey)}` : 'no pages yet';
+    document.getElementById('rsPace').textContent = pace ? `${pace} day${pace === 1 ? '' : 's'}` : '—';
+    document.getElementById('rsPaceSub').textContent = pace ? 'per book on average' : 'needs start + finish dates';
+
+    // Last 30 days
+    const chart = document.getElementById('rsChart');
+    chart.innerHTML = '';
+    const keys = Array.from({ length: 30 }, (_, i) => window.mochiShiftDay(today, i - 29));
+    const values = keys.map(k => days[k] || 0);
+    const max = Math.max(...values, 1);
+    const bestIdx = values.indexOf(Math.max(...values));
+    values.forEach((v, i) => {
+        const bar = document.createElement('div');
+        bar.className = v ? (i === bestIdx ? 'best' : '') : 'zero';
+        bar.style.height = v ? `${Math.max(8, v / max * 100)}%` : '4%';
+        bar.title = `${fmtDay(keys[i])}: ${v} pages`;
+        chart.appendChild(bar);
+    });
+    document.getElementById('rsAxisFrom').textContent = fmtDay(keys[0]);
+
+    // Genres: this year's finished books, else everything on the shelf
+    const year = new Date().getFullYear();
+    let pool = books.filter(b => b.status === 'read' && b.dateFinished && new Date(b.dateFinished).getFullYear() === year);
+    if (!pool.length) pool = books;
+    const genresEl = document.getElementById('rsGenres');
+    genresEl.innerHTML = '';
+    const breakdown = window.mochiGenreBreakdown(pool).slice(0, 5);
+    if (!breakdown.length) {
+        const p = document.createElement('div');
+        p.className = 'rs-empty';
+        p.textContent = 'Add books to your shelf to see your genres';
+        genresEl.appendChild(p);
+    }
+    breakdown.forEach(g => {
+        const row = document.createElement('div');
+        row.className = 'rs-genre';
+        row.innerHTML = '<span></span><div class="track"><div class="fill"></div></div><span class="pct"></span>';
+        row.querySelector('span').textContent = g.label;
+        row.querySelector('.fill').style.width = `${g.pct}%`;
+        row.querySelector('.pct').textContent = `${g.pct}%`;
+        genresEl.appendChild(row);
+    });
+
+    const voice = STATS_VOICE[companion] || STATS_VOICE.cottage;
+    document.getElementById('rsVoiceName').textContent = `${name} says...`;
+    document.getElementById('rsVoiceLine').textContent = !avg ? voice.none : (avg >= 30 ? voice.good(avg) : voice.some(avg));
+}
+
 // ── Init ──
 function init() {
     const books = getBooks();
@@ -1655,6 +1806,9 @@ function init() {
 
     // Companion level (Mochi Pro)
     renderLevel(books, companion, name);
+
+    // Reading stats (Mochi Pro)
+    renderReadingStats(books, companion, name);
 }
 
 window.initMochi(() => init());

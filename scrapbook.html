@@ -319,6 +319,14 @@ function renderPage() {
             </div>
             <div class="divider"></div>
 
+            <div class="field-group">
+                <div class="field-label">Pages in this book</div>
+                <input class="page-input" type="number" id="totalPages"
+                       value="${book.pageCount || ''}" min="1" placeholder="e.g. 400">
+                <div class="page-progress" id="totalPagesNote">${book.pageCount ? 'From Open Library — change it if your edition is different' : "Open Library doesn't know this one — type it in so your stats can count it"}</div>
+            </div>
+            <div class="divider"></div>
+
             <div id="dateStartedWrap" style="${book.status === 'want' ? 'display:none' : ''}">
                 <div class="field-group">
                     <div class="field-label">Date started</div>
@@ -333,9 +341,8 @@ function renderPage() {
                     <input class="page-input" type="number" id="currentPage"
                            value="${book.currentPage || ''}"
                            min="1"
-                           ${book.pageCount ? `max="${book.pageCount}"` : ''}
                            placeholder="e.g. 142">
-                    ${book.pageCount ? `<div class="page-progress" id="pageProgress">${book.currentPage ? `${Math.round((book.currentPage / book.pageCount) * 100)}% through` : `of ${book.pageCount} pages`}</div>` : ''}
+                    <div class="page-progress" id="pageProgress"></div>
                 </div>
                 <div class="divider"></div>
             </div>
@@ -396,18 +403,19 @@ function renderPage() {
         });
     });
 
+    // "% through" follows both the page you're on and the total you typed
     const pageInput = document.getElementById('currentPage');
+    const totalInput = document.getElementById('totalPages');
     const pageProgress = document.getElementById('pageProgress');
-    if (pageInput && pageProgress && book.pageCount) {
-        pageInput.addEventListener('input', () => {
-            const v = parseInt(pageInput.value);
-            if (!isNaN(v) && v > 0) {
-                pageProgress.textContent = `${Math.round((v / book.pageCount) * 100)}% through`;
-            } else {
-                pageProgress.textContent = `of ${book.pageCount} pages`;
-            }
-        });
-    }
+    const syncProgress = () => {
+        const total = parseInt(totalInput.value);
+        const v = parseInt(pageInput.value);
+        if (!total || total < 1) { pageProgress.textContent = 'Add the total pages above to see your progress'; return; }
+        pageProgress.textContent = (!isNaN(v) && v > 0) ? `${Math.min(100, Math.round((v / total) * 100))}% through` : `of ${total} pages`;
+    };
+    pageInput.addEventListener('input', syncProgress);
+    totalInput.addEventListener('input', syncProgress);
+    syncProgress();
 
     document.getElementById('saveBtn').addEventListener('click', saveBook);
     document.getElementById('changeCoverBtn').addEventListener('click', openCoverPicker);
@@ -439,21 +447,37 @@ async function saveBook() {
 
     const pageEl = document.getElementById('currentPage');
     const parsedPage = pageEl ? parseInt(pageEl.value) : NaN;
+    const parsedTotal = parseInt(document.getElementById('totalPages').value);
+    const pageCount = !isNaN(parsedTotal) && parsedTotal > 0 ? parsedTotal : null;
 
     const updated = {
         ...book,
         status: currentStatus,
         rating: currentStatus === 'read' ? (currentRating || null) : null,
         notes: document.getElementById('notesInput').value.trim(),
+        pageCount,
         dateStarted: currentStatus === 'want' ? null : dateStartedVal,
         dateFinished: currentStatus === 'read' ? (dateFinishedVal || book.dateFinished || Date.now()) : null,
         currentPage: currentStatus === 'reading' && !isNaN(parsedPage) && parsedPage > 0 ? parsedPage : null,
     };
 
+    // Reading log: pages read since the last save count for today
+    const prevPage = book.currentPage || 0;
+    const hasLog = window.mochiGetLog().some(e => e.bookId === book.id);
+    try {
+        if (updated.status === 'reading' && updated.currentPage > prevPage) {
+            await window.mochiLogPages(book.id, updated.currentPage - prevPage);
+        } else if (updated.status === 'read' && book.status !== 'read' && hasLog && pageCount && pageCount > prevPage) {
+            // finishing a book we were logging: the rest of it was read today
+            await window.mochiLogPages(book.id, pageCount - prevPage);
+        }
+    } catch (e) { console.error('Reading log failed:', e); }
+
     const books = window.mochiGetBooks();
     const idx = books.findIndex(b => b.id === book.id);
     if (idx !== -1) books[idx] = updated;
     book = updated;
+    try { sessionStorage.setItem('mochiCurrentBook', JSON.stringify(updated)); } catch (_) {}
 
     await window.mochiUpdateBook(updated);
 

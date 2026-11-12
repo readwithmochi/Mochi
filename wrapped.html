@@ -303,6 +303,28 @@
         }
 
         /* ─────────────────────── */
+        /* Section 3b: Rhythm (pages per day) */
+        /* ─────────────────────── */
+        .s-rhythm2 { background: var(--pink-soft); }
+        .s-rhythm2 .section-label { color: var(--pink-deep); opacity: 1; }
+        .heat-wrap { width: min(640px, 100%); margin: 24px auto 0; }
+        .heat { display: grid; grid-template-rows: repeat(7, 1fr); grid-auto-flow: column; grid-auto-columns: 1fr; gap: 2px; }
+        .heat div { aspect-ratio: 1; border-radius: 2px; background: var(--surface); border: 1px solid var(--border); }
+        .heat div.gap { visibility: hidden; }
+        .heat .l1 { background: var(--pink-light); border-color: transparent; }
+        .heat .l2 { background: var(--pink); border-color: transparent; }
+        .heat .l3 { background: var(--pink-deep); border-color: transparent; }
+        .heat .future { opacity: 0.35; }
+        .heat-cap { margin-top: 8px; font-size: 0.68rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); }
+        .rhythm-pills { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 20px 0 14px; }
+        .rhythm-pill {
+            background: var(--surface); border: 1.5px solid var(--border); border-radius: 100px;
+            padding: 8px 16px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted);
+        }
+        .rhythm-pill b { color: var(--pink-deep); }
+        .s-rhythm2 .section-lead { color: var(--text); }
+
+        /* ─────────────────────── */
         /* Section 4: Author       */
         /* ─────────────────────── */
         .s-author { background: #EEF7F2; }
@@ -684,6 +706,18 @@
     <div class="fade-up delay-3" id="bestMonthCallout"></div>
 </section>
 
+<!-- Section 3b: Reading rhythm (only when pages per day are known) -->
+<section class="wrapped-section s-rhythm2" id="s3b" style="display:none">
+    <p class="section-label fade-up">Your reading rhythm</p>
+    <h2 class="section-big fade-up delay-1" id="rhythmTitle">Every page counts.</h2>
+    <div class="heat-wrap fade-up delay-2">
+        <div class="heat" id="heatmap"></div>
+        <div class="heat-cap">Jan → Dec · darker = more pages</div>
+    </div>
+    <div class="rhythm-pills fade-up delay-3" id="rhythmPills"></div>
+    <p class="section-lead fade-up delay-4" id="rhythmDesc"></p>
+</section>
+
 <!-- Section 4: Author -->
 <section class="wrapped-section s-author" id="s4">
     <p class="section-label fade-up">You couldn't get enough of</p>
@@ -729,6 +763,14 @@
         <div class="summary-row" id="sumPagesRow">
             <span class="summary-row-label">📄 Pages read</span>
             <span class="summary-row-value" id="sumPages">—</span>
+        </div>
+        <div class="summary-row" id="sumStreakRow" style="display:none">
+            <span class="summary-row-label">🔥 Longest streak</span>
+            <span class="summary-row-value" id="sumStreak">—</span>
+        </div>
+        <div class="summary-row" id="sumGenreRow" style="display:none">
+            <span class="summary-row-label">📖 Top genre</span>
+            <span class="summary-row-value" id="sumGenre">—</span>
         </div>
         <div class="summary-row">
             <span class="summary-row-label">✍️ Fave author</span>
@@ -850,13 +892,36 @@ function computeWrapped(books) {
 
     const goal = getGoalResult(totalBooks, window.mochiGetGoal());
 
+    const rhythm = getRhythm(year, readThisYear);
+
     return {
-        year, totalBooks, totalPages, byMonth, bestMonthIdx, goal,
+        year, totalBooks, totalPages, byMonth, bestMonthIdx, goal, rhythm,
         favAuthor, favAuthorCount, authorBooks,
         topTag, topTagsDisplay, vibe,
         topRated, hasAllFiveStars,
         personality, funFact,
         readThisYear,
+    };
+}
+
+// Pages per day for this year (reading log + estimates from mochi.js), streaks and the top genre.
+// null when nothing is known yet — then the rhythm section and the card rows stay hidden.
+function getRhythm(year, readThisYear) {
+    const all = window.mochiReadingDays();
+    const days = {};
+    Object.keys(all).forEach(k => { if (k.startsWith(`${year}-`)) days[k] = all[k]; });
+    const keys = Object.keys(days);
+    if (!keys.length) return null;
+    const total = keys.reduce((s, k) => s + days[k], 0);
+    let bestKey = keys[0];
+    keys.forEach(k => { if (days[k] > days[bestKey]) bestKey = k; });
+    const topGenre = window.mochiGenreBreakdown(readThisYear).find(g => g.key !== 'other') || null;
+    return {
+        days, daysRead: keys.length, total,
+        perDay: Math.round(total / keys.length),
+        longest: window.mochiStreaks(days).longest,
+        bestKey, bestPages: days[bestKey],
+        topGenre,
     };
 }
 
@@ -1075,6 +1140,55 @@ async function render(data) {
     if (bestCount > 0) {
         document.getElementById('bestMonthCallout').innerHTML =
             `<div class="best-month-callout">Your best month: ${MONTH_FULL[bestMonthIdx]} with ${bestCount} book${bestCount > 1 ? 's' : ''} ✨</div>`;
+    }
+
+    // Section 3b: Reading rhythm
+    if (data.rhythm) {
+        const r = data.rhythm;
+        document.getElementById('s3b').style.display = '';
+        document.getElementById('rhythmTitle').textContent =
+            r.longest >= 14 ? 'Consistency queen.' : r.daysRead >= 60 ? 'A reader, every week.' : 'Every page counts.';
+        const heat = document.getElementById('heatmap');
+        const first = `${year}-01-01`, last = `${year}-12-31`;
+        const today = window.mochiDayKey(Date.now());
+        const offset = (new Date(year, 0, 1).getDay() + 6) % 7; // Monday first
+        const gridStart = window.mochiShiftDay(first, -offset);
+        const max = r.bestPages || 1;
+        for (let i = 0, key = gridStart; i < 53 * 7; i++, key = window.mochiShiftDay(key, 1)) {
+            const cell = document.createElement('div');
+            if (key < first || key > last) cell.className = 'gap';
+            else {
+                const v = r.days[key] || 0;
+                const level = !v ? '' : v < max / 3 ? 'l1' : v < max * 2 / 3 ? 'l2' : 'l3';
+                cell.className = `${level}${key > today ? ' future' : ''}`.trim();
+                cell.title = `${key}: ${v} pages`;
+            }
+            heat.appendChild(cell);
+        }
+        const pills = document.getElementById('rhythmPills');
+        const pill = (label, value) => {
+            const el = document.createElement('span');
+            el.className = 'rhythm-pill';
+            el.textContent = label + ' ';
+            const b = document.createElement('b');
+            b.textContent = value;
+            el.appendChild(b);
+            pills.appendChild(el);
+        };
+        pill('Days you read', r.daysRead);
+        if (r.longest > 1) pill('Longest streak', `${r.longest} days`);
+        pill('Pages on a reading day', r.perDay);
+        if (r.topGenre) pill('Top genre', r.topGenre.label);
+        document.getElementById('rhythmDesc').textContent =
+            `Your biggest day was ${MONTH_FULL[Number(r.bestKey.slice(5, 7)) - 1]} ${Number(r.bestKey.slice(8, 10))} with ${r.bestPages} pages. ✨`;
+        if (r.longest > 1) {
+            document.getElementById('sumStreakRow').style.display = '';
+            document.getElementById('sumStreak').textContent = `${r.longest} days`;
+        }
+        if (r.topGenre) {
+            document.getElementById('sumGenreRow').style.display = '';
+            document.getElementById('sumGenre').textContent = r.topGenre.label;
+        }
     }
 
     // Section 4: Author
@@ -1404,22 +1518,26 @@ async function drawWrappedCard(data, themeKey, nickname, scale) {
     const bestCount = data.byMonth[data.bestMonthIdx].length;
     if (data.goal) rows.push(['Reading goal', `${data.goal.books}/${data.goal.target} · ${data.goal.short}`]);
     if (bestCount > 0) rows.push(['Best month', MONTH_FULL[data.bestMonthIdx]]);
+    if (data.rhythm && data.rhythm.longest > 1) rows.push(['Longest streak', `${data.rhythm.longest} days`]);
+    if (data.rhythm && data.rhythm.topGenre) rows.push(['Top genre', data.rhythm.topGenre.label.replace(/^\S+\s/, '')]);
     rows.push(['Fave author', data.favAuthor]);
     if (data.vibe.word !== data.personality.type && rows.length < 4) rows.push(['Top vibe', data.vibe.word]);
     rows.push(['Reader type', data.personality.type]);
 
-    const ROW_H = 84, panelY = 1290;
+    // Up to 6 rows must fit above the speech bubble and the footer — tighten when there are many
+    const compact = rows.length >= 5;
+    const ROW_H = compact ? 64 : 84, panelY = 1290;
     roundRect(ctx, PAD, panelY, INNER, rows.length * ROW_H + 30, 36);
     ctx.fillStyle = t.panel; ctx.fill();
     rows.forEach(([label, value], i) => {
         const y = panelY + 15 + i * ROW_H + ROW_H / 2 + 11;
         ctx.textAlign = 'left';
         ctx.fillStyle = t.muted;
-        ctx.font = sans(600, 30);
+        ctx.font = sans(600, compact ? 27 : 30);
         ctx.fillText(label, PAD + 44, y);
         ctx.textAlign = 'right';
         ctx.fillStyle = t.text;
-        fitFont(ctx, value, INNER - 360, 34, s => sans(800, s));
+        fitFont(ctx, value, INNER - 360, compact ? 30 : 34, s => sans(800, s));
         ctx.fillText(value, PAD + INNER - 44, y);
         if (i < rows.length - 1) {
             ctx.fillStyle = t.divider;
@@ -1439,7 +1557,7 @@ async function drawWrappedCard(data, themeKey, nickname, scale) {
     setSpacing(ctx, 0);
     const EMOJI_BOX = 96, BPAD = 34;
     const bw = Math.min(BPAD + EMOJI_BOX + 26 + Math.max(quoteW, labelW) + BPAD, INNER);
-    const bh = 124;
+    const bh = compact ? 108 : 124;
     const bx = (CARD_W - bw) / 2;
     // centred in the space between the highlights and the footer
     const by = Math.max(panelBottom + 40, panelBottom + (1830 - panelBottom - bh) / 2);
@@ -1479,7 +1597,7 @@ async function drawWrappedCard(data, themeKey, nickname, scale) {
     ctx.fillStyle = t.muted;
     ctx.font = sans(700, 26);
     setSpacing(ctx, 2);
-    ctx.fillText('readwithmochi.github.io/Mochi', CARD_W / 2, 1868);
+    ctx.fillText('readwithmochi.github.io/Mochi', CARD_W / 2, 1880);
     setSpacing(ctx, 0);
 
     return canvas;
@@ -1652,7 +1770,7 @@ async function init() {
 
     render(data);
     setupCard(data);
-    setupScrollObserver(['s1','s2', ...(data.goal ? ['s2b'] : []), 's3','s4','s5','s6','s7','s8']);
+    setupScrollObserver(['s1','s2', ...(data.goal ? ['s2b'] : []), 's3', ...(data.rhythm ? ['s3b'] : []), 's4','s5','s6','s7','s8']);
 }
 
 window.initMochi(() => init());

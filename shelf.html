@@ -619,12 +619,49 @@
             border-radius: 100px; transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1); min-width: 4px;
         }
 
+        /* ── This week (pages per day) ── */
+        .week-wrap { max-width: 1100px; margin: 0 auto; padding: 0 40px 28px; }
+        .week {
+            background: var(--surface); border: 1.5px solid var(--border);
+            border-radius: 18px; padding: 16px 18px;
+            display: grid; gap: 10px;
+        }
+        .week-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .week-title { font-weight: 800; font-size: 0.86rem; }
+        .week-streak { font-size: 0.78rem; font-weight: 800; color: var(--pink-deep); }
+        .week-bars { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; align-items: end; height: 70px; margin-top: 14px; }
+        .week-bar { background: var(--pink-light); border-radius: 6px 6px 3px 3px; min-height: 4px; position: relative; opacity: 0.6; transition: height 0.6s cubic-bezier(0.34,1.2,0.64,1); }
+        .week-bar.on { background: var(--pink); opacity: 1; }
+        .week-bar.today { background: var(--pink-deep); opacity: 1; }
+        .week-bar i { position: absolute; top: -17px; left: 0; right: 0; text-align: center; font-size: 0.62rem; font-weight: 800; font-style: normal; color: var(--pink-deep); }
+        .week-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; font-size: 0.62rem; font-weight: 700; color: var(--text-muted); text-align: center; }
+        .week-days span.today { color: var(--pink-deep); }
+        .week-foot { display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+        .week-sum { font-size: 0.76rem; color: var(--text-muted); font-weight: 600; }
+        .week-voice { font-size: 0.76rem; color: var(--text-muted); }
+        .week-voice strong { color: var(--text); }
+        .btn-log {
+            background: var(--pink-deep); color: #fff; border: none; border-radius: 100px;
+            padding: 8px 16px; font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 0.76rem; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-log:hover { filter: brightness(0.92); transform: translateY(-1px); }
+        .log-select, .log-number {
+            width: 100%; background: var(--pink-soft); border: 1.5px solid var(--border); border-radius: 12px;
+            padding: 11px 14px; font-family: 'Nunito', sans-serif; font-size: 0.9rem; color: var(--text); outline: none;
+        }
+        .log-select:focus, .log-number:focus { border-color: var(--pink); }
+        .log-number { -moz-appearance: textfield; }
+        .log-number::-webkit-outer-spin-button, .log-number::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .log-msg { font-size: 0.8rem; font-weight: 700; color: #C05050; margin-top: 8px; display: none; }
+        .log-msg.show { display: block; }
+
         /* ── Responsive ── */
         @media (max-width: 640px) {
             header { padding: 14px 18px; }
             nav a { padding: 6px 10px; font-size: 0.8rem; }
             .page-hero { padding: 32px 20px 20px; }
             .goal-wrap { padding: 0 20px 16px; }
+            .week-wrap { padding: 0 20px 20px; }
             .filters { padding: 0 20px 24px; }
             .shelf { padding: 0 20px 100px; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 18px; }
             .pet-corner { bottom: 14px; right: 14px; }
@@ -665,6 +702,7 @@
 </div>
 
 <div class="goal-wrap" id="goalWrap"></div>
+<div class="week-wrap" id="weekWrap"></div>
 <div class="filters" id="filters"></div>
 <div class="divider"></div>
 <section class="shelf" id="shelf"></section>
@@ -757,6 +795,31 @@
 </div>
 
 
+<!-- ── Log pages Modal ── -->
+<div class="modal-overlay" id="logModalOverlay">
+    <div class="modal">
+        <div class="modal-header">
+            <span class="modal-title">Log pages 📖</span>
+            <button class="modal-close" id="closeLogModal">✕</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="form-label">Which book?</label>
+                <select class="log-select" id="logBook"></select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Pages read today</label>
+                <input class="log-number" type="number" id="logPages" min="1" placeholder="e.g. 40">
+            </div>
+            <div class="log-msg" id="logMsg"></div>
+            <div class="modal-actions">
+                <button class="btn-ghost" id="cancelLog">Cancel</button>
+                <button class="btn-primary" id="submitLog">Save 🌸</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="mochi.js"></script>
 <script>
@@ -838,11 +901,12 @@ function renderStats(books) {
     const total = books.length;
     const read = books.filter(b => b.status === 'read').length;
     const reading = books.filter(b => b.status === 'reading').length;
+    const streak = window.mochiStreaks().current;
     document.getElementById('stats').innerHTML = `
         <div class="stat-pill"><span>${total}</span> books</div>
         <div class="stat-pill"><span>${read}</span> read</div>
         ${reading ? `<div class="stat-pill"><span>${reading}</span> reading now</div>` : ''}
-        ${calculateStreak(books) > 0 ? `<div class="stat-pill">streak <span>✦ ${calculateStreak(books)} day${calculateStreak(books) !== 1 ? 's' : ''}</span></div>` : ''}
+        ${streak > 0 ? `<div class="stat-pill">streak <span>✦ ${streak} day${streak !== 1 ? 's' : ''}</span></div>` : ''}
     `;
 }
 
@@ -1201,6 +1265,7 @@ function submitAddBook() {
     activeFilter = 'all';
     renderShelf();
     renderGoal();
+    renderWeek();
 
     window.mochiInsertBook(newBook).catch(err => {
         console.error('Insert failed:', err);
@@ -1214,33 +1279,111 @@ function submitAddBook() {
 }
 
 // ──────────────────────────────────────────
-// Streak
+// This week: pages per day + streak (from the reading log in mochi.js)
 // ──────────────────────────────────────────
-function calculateStreak(books) {
-    const readDates = books
-        .filter(b => b.status === 'reading' || b.status === 'read')
-        .map(b => b.dateStarted || b.dateAdded)
-        .filter(Boolean)
-        .map(ts => {
-            const d = new Date(ts);
-            return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
-        });
+const WEEK_DAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'];
 
-    if (!readDates.length) return 0;
+// What the companion says under the week — streak first, otherwise a nudge
+const WEEK_VOICE = {
+    cottage:  { streak: n => `${n} days in a row! So proud of you 🌸`, today: p => `${p} pages today, look at you go 📖`, none: 'Read a few pages today? Log them and I\'ll cheer 🌸' },
+    lavender: { streak: n => `${n} days. don't break it. I'm watching.`, today: p => `${p} pages today. acceptable.`, none: 'no pages logged. the villains are waiting.' },
+    sage:     { streak: n => `${n} days. nice. no rush.`, today: p => `${p} pages. good.`, none: 'no pages yet. that\'s okay. a few would be nice.' },
+    golden:   { streak: n => `${n}-DAY STREAK!! LET'S GOOO ⭐`, today: p => `${p} PAGES TODAY, CHAMPION 🏆`, none: 'LOG SOME PAGES, LET\'S GET A STREAK GOING ⭐' },
+};
 
-    const unique = [...new Set(readDates)].sort((a, b) => b - a);
-    const today = new Date();
-    const todayTs = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-    const yesterdayTs = todayTs - 86400000;
+function weekKeys() {
+    const today = window.mochiDayKey(Date.now());
+    const offset = (new Date().getDay() + 6) % 7; // Monday = 0
+    const monday = window.mochiShiftDay(today, -offset);
+    return Array.from({ length: 7 }, (_, i) => window.mochiShiftDay(monday, i));
+}
 
-    if (unique[0] !== todayTs && unique[0] !== yesterdayTs) return 0;
+function renderWeek() {
+    const wrap = document.getElementById('weekWrap');
+    if (!wrap) return;
+    const days = window.mochiReadingDays();
+    const keys = weekKeys();
+    const today = window.mochiDayKey(Date.now());
+    const values = keys.map(k => days[k] || 0);
+    const max = Math.max(...values, 1);
+    const total = values.reduce((s, v) => s + v, 0);
+    const daysRead = values.filter(Boolean).length;
+    const streak = window.mochiStreaks(days).current;
+    const companion = window.mochiGetCompanion();
+    const voice = WEEK_VOICE[companion.key] || WEEK_VOICE.cottage;
+    const line = streak >= 2 ? voice.streak(streak) : (days[today] ? voice.today(days[today]) : voice.none);
 
-    let streak = 1;
-    for (let i = 1; i < unique.length; i++) {
-        if (unique[i - 1] - unique[i] === 86400000) streak++;
-        else break;
+    wrap.innerHTML = `
+        <div class="week">
+            <div class="week-head">
+                <span class="week-title">📖 This week</span>
+                ${streak > 0 ? `<span class="week-streak">✦ ${streak}-day streak</span>` : ''}
+            </div>
+            <div class="week-bars">
+                ${values.map((v, i) => `<div class="week-bar${v ? ' on' : ''}${keys[i] === today ? ' today' : ''}" style="height:${v ? Math.max(12, v / max * 100) : 6}%" title="${v} pages">${v ? `<i>${v}</i>` : ''}</div>`).join('')}
+            </div>
+            <div class="week-days">${keys.map((k, i) => `<span class="${k === today ? 'today' : ''}">${WEEK_DAYS[i]}</span>`).join('')}</div>
+            <div class="week-foot">
+                <span class="week-sum">${total ? `${total.toLocaleString()} pages · ${Math.round(total / daysRead)} a day` : 'No pages logged this week yet'}</span>
+                <button class="btn-log" id="openLogModal" type="button">+ Log pages</button>
+            </div>
+            <div class="week-voice"><strong></strong> <span></span></div>
+        </div>
+    `;
+    wrap.querySelector('.week-voice strong').textContent = `${companion.name} says...`;
+    wrap.querySelector('.week-voice span').textContent = line;
+    wrap.querySelector('#openLogModal').addEventListener('click', openLogModal);
+}
+
+function openLogModal() {
+    const books = getBooks();
+    if (!books.length) { alert('Add a book to your shelf first, then log your pages 🌸'); return; }
+    const select = document.getElementById('logBook');
+    select.innerHTML = '';
+    const reading = books.filter(b => b.status === 'reading');
+    const others = books.filter(b => b.status !== 'reading');
+    const addOpt = (b, group) => {
+        const o = document.createElement('option');
+        o.value = b.id;
+        o.textContent = (group ? group + ' ' : '') + b.title;
+        select.appendChild(o);
+    };
+    reading.forEach(b => addOpt(b, '📖'));
+    others.forEach(b => addOpt(b, ''));
+    document.getElementById('logPages').value = '';
+    document.getElementById('logMsg').classList.remove('show');
+    document.getElementById('logModalOverlay').classList.add('open');
+    setTimeout(() => document.getElementById('logPages').focus(), 150);
+}
+
+function closeLogModal() {
+    document.getElementById('logModalOverlay').classList.remove('open');
+}
+
+async function submitLog() {
+    const bookId = document.getElementById('logBook').value;
+    const pages = parseInt(document.getElementById('logPages').value);
+    const msg = document.getElementById('logMsg');
+    if (!pages || pages < 1) { msg.textContent = 'How many pages did you read?'; msg.classList.add('show'); return; }
+    const btn = document.getElementById('submitLog');
+    btn.disabled = true; btn.textContent = 'Saving...';
+    try {
+        await window.mochiLogPages(bookId, pages);
+        // Move the bookmark along too, so Scrapbook and the log agree
+        const book = getBooks().find(b => b.id === bookId);
+        if (book && book.status === 'reading') {
+            book.currentPage = (book.currentPage || 0) + pages;
+            if (book.pageCount) book.currentPage = Math.min(book.currentPage, book.pageCount);
+            window.mochiUpdateBook(book);
+        }
+        closeLogModal();
+        renderWeek();
+        renderStats(getBooks());
+    } catch (err) {
+        msg.textContent = 'Could not save: ' + (err.message || err);
+        msg.classList.add('show');
     }
-    return streak;
+    btn.disabled = false; btn.textContent = 'Save 🌸';
 }
 
 // ──────────────────────────────────────────
@@ -1303,7 +1446,15 @@ document.getElementById('addModalOverlay').addEventListener('click', e => {
 });
 
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeAddModal();
+    if (e.key === 'Escape') { closeAddModal(); closeLogModal(); }
+});
+
+document.getElementById('closeLogModal').addEventListener('click', closeLogModal);
+document.getElementById('cancelLog').addEventListener('click', closeLogModal);
+document.getElementById('submitLog').addEventListener('click', submitLog);
+document.getElementById('logPages').addEventListener('keydown', e => { if (e.key === 'Enter') submitLog(); });
+document.getElementById('logModalOverlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('logModalOverlay')) closeLogModal();
 });
 
 document.getElementById('bookSearchInput').addEventListener('input', e => {
@@ -1372,6 +1523,7 @@ window.initMochi(() => {
     document.getElementById('shelfHeroName').textContent = displayName + "'s";
     renderShelf();
     renderGoal();
+    renderWeek();
     setupNotifBtn();
 });
 </script>

@@ -596,6 +596,143 @@
         await _sb.from('push_subscriptions').delete().eq('user_id', _user.id);
     };
 
+    // ── Reading log: pages per day ──────────────────
+    // Table reading_log (user_id, book_id, day, pages). Filled when "Page I'm on" grows,
+    // when a book is finished, or through "+ Log pages" on the shelf.
+    let _log = [];
+    const _dayKey = (d) => {
+        const x = new Date(d);
+        return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`;
+    };
+    const _shiftDay = (key, delta) => {
+        const [y, m, d] = key.split('-').map(Number);
+        const x = new Date(y, m - 1, d);
+        x.setDate(x.getDate() + delta);
+        return _dayKey(x);
+    };
+    window.mochiDayKey = _dayKey;
+    window.mochiShiftDay = _shiftDay;
+    window.mochiGetLog = () => _log;
+
+    window.mochiLoadLog = async () => {
+        if (!_user) return _log;
+        const { data, error } = await _sb.from('reading_log').select('book_id, day, pages').eq('user_id', _user.id).order('day');
+        if (error) throw error;
+        _log = (data || []).map(r => ({ bookId: r.book_id, day: r.day, pages: r.pages }));
+        return _log;
+    };
+
+    window.mochiLogPages = async (bookId, pages, day) => {
+        pages = Math.round(Number(pages));
+        if (!pages || pages < 1) return null;
+        const entry = { bookId: bookId || null, day: day || _dayKey(Date.now()), pages };
+        _log.push(entry);
+        const { error } = await _sb.from('reading_log').insert({ user_id: _user.id, book_id: entry.bookId, day: entry.day, pages });
+        if (error) { _log.splice(_log.indexOf(entry), 1); throw error; }
+        return entry;
+    };
+
+    // { 'YYYY-MM-DD': pages } — real log entries, plus an estimate for pages read before the log
+    // knew about them: those pages are spread evenly over the days the book was being read
+    // (no start date known → the 7 days up to the finish date). Once a book has log entries,
+    // only the pages *before* its first entry are estimated, so logging never erases history.
+    window.mochiReadingDays = () => {
+        const days = {};
+        const add = (key, p) => { days[key] = (days[key] || 0) + p; };
+        const logSum = {}, firstLogDay = {};
+        _log.forEach(e => {
+            add(e.day, e.pages);
+            if (!e.bookId) return;
+            logSum[e.bookId] = (logSum[e.bookId] || 0) + e.pages;
+            if (!firstLogDay[e.bookId] || e.day < firstLogDay[e.bookId]) firstLogDay[e.bookId] = e.day;
+        });
+        _books.forEach(b => {
+            if (!b.pageCount) return;
+            let pages, startKey, endKey;
+            if (b.status === 'read' && b.dateFinished) {
+                pages = b.pageCount;
+                endKey = _dayKey(b.dateFinished);
+                startKey = b.dateStarted && b.dateStarted <= b.dateFinished ? _dayKey(b.dateStarted) : _shiftDay(endKey, -6);
+            } else if (b.status === 'reading' && b.currentPage > 0) {
+                pages = Math.min(b.currentPage, b.pageCount);
+                endKey = _dayKey(Date.now());
+                const from = b.dateStarted && b.dateStarted <= Date.now() ? b.dateStarted : (b.dateAdded || Date.now());
+                startKey = _dayKey(from);
+                if (startKey > endKey) startKey = endKey;
+            } else return;
+            if (logSum[b.id]) {
+                pages -= logSum[b.id];
+                endKey = _shiftDay(firstLogDay[b.id], -1);
+                if (pages <= 0 || startKey > endKey) return;
+            }
+            const keys = [];
+            for (let k = startKey; k <= endKey && keys.length < 400; k = _shiftDay(k, 1)) keys.push(k);
+            const per = pages / keys.length;
+            keys.forEach(k => add(k, per));
+        });
+        Object.keys(days).forEach(k => { days[k] = Math.round(days[k]); if (!days[k]) delete days[k]; });
+        return days;
+    };
+
+    // current = days in a row up to today (or yesterday), longest = best run ever
+    window.mochiStreaks = (days) => {
+        days = days || window.mochiReadingDays();
+        const keys = Object.keys(days).sort();
+        const set = new Set(keys);
+        const today = _dayKey(Date.now());
+        let k = set.has(today) ? today : (set.has(_shiftDay(today, -1)) ? _shiftDay(today, -1) : null);
+        let current = 0;
+        while (k && set.has(k)) { current++; k = _shiftDay(k, -1); }
+        let longest = 0, run = 0, last = null;
+        keys.forEach(key => { run = (last && _shiftDay(key, -1) === last) ? run + 1 : 1; if (run > longest) longest = run; last = key; });
+        return { current, longest };
+    };
+
+    // ── Genres ──────────────────────────────────────
+    const _GENRE_LABELS = {
+        romance: '💕 Romance', dark_romance: '🖤 Dark Romance', thriller: '🔪 Thriller', fantasy: '✨ Fantasy',
+        contemporary: '🌸 Contemporary', ya: '🎒 YA', mystery: '🕵️ Mystery', scifi: '🚀 Sci-Fi', booktok: '🔥 BookTok', other: '📚 Other',
+    };
+    const _TAG_GENRES = [
+        [/dark/i, 'dark_romance'], [/romance|love|enemies|slow.?burn|spicy|smut|romcom/i, 'romance'],
+        [/thriller|suspense|twist|crime/i, 'thriller'], [/fantasy|magic|fae|dragon|romantasy/i, 'fantasy'],
+        [/mystery|whodunit|detective/i, 'mystery'], [/sci.?fi|space|dystop/i, 'scifi'],
+        [/\bya\b|young adult|teen/i, 'ya'], [/contemporary|emotional|cry|literary|slice of life/i, 'contemporary'],
+    ];
+    const _titleKey = t => (t || '').toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ').trim();
+    // Books from the Discover lists already know their genre (generated from discover.html on 2026-10-16)
+    const _CURATED_GENRES = {
+        booktok: ["icebreaker"],
+        contemporary: ["a little life","beautiful world where are you","conversations with friends","daisy jones and the six","demon copperhead","dial a for aunties","eleanor oliphant is completely fine","hello beautiful","lessons in chemistry","malibu rising","me before you","normal people","one day","remarkably bright creatures","the alchemist","the covenant of water","the midnight library","the seven husbands of evelyn hugo","tomorrow and tomorrow and tomorrow","where the crawdads sing"],
+        dark_romance: ["a shadow in the ember","binding 13","birthday girl","butcher blackbird","corrupt","credence","den of vipers","devious lies","god of malice","haunting adeline","hunting adeline","king of wrath","kingdom of the feared","terms and conditions","the never king","the villain","twisted games","twisted hate","twisted lies","twisted love"],
+        fantasy: ["a court of mist and fury","a court of thorns and roses","an ember in the ashes","babel","caraval","crooked kingdom","fourth wing","from blood and ash","house of salt and sorrows","iron flame","kingdom of the wicked","legendary","piranesi","powerless","shadow and bone","six of crows","the cruel prince","the gilded wolves","the house in the cerulean sea","the name of the wind","the night circus","the poppy war","the wicked king","throne of glass"],
+        mystery: ["a good girls guide to murder","and then there were none","murder on the orient express","the appeal","the christie affair","the death of mrs westaway","the final gambit","the inheritance games","the last murder at the end of the world","the maid","the naturals","the plot","the thursday murder club","the woman in cabin 10","truly devious"],
+        romance: ["act your age eve brown","beach read","beautiful disaster","book lovers","boyfriend material","get a life chloe brown","happy place","in a holidaze","it ends with us","just for the summer","november 9","one day in december","part of your world","people we meet on vacation","reminders of him","the american roommate experiment","the flatshare","the friend zone","the hating game","the kiss quotient","the spanish love deception","the switch","the unhoneymooners","ugly love"],
+        scifi: ["a memory called empire","all systems red","children of time","dark matter","dune","enders game","flowers for algernon","klara and the sun","never let me go","project hail mary","ready player one","recursion","red rising","starter villain","station eleven","the handmaids tale","the hitchhikers guide to the galaxy","the kaiju preservation society","the long way to a small angry planet","the martian","the power","the threebody problem","upgrade"],
+        thriller: ["behind closed doors","big little lies","finlay donovan is killing it","gone girl","his and hers","in a dark dark wood","local woman missing","nine perfect strangers","one by one","pretty girls","rock paper scissors","sharp objects","sometimes i lie","the girl on the train","the guest list","the hunting party","the last thing he told me","the maidens","the sanatorium","the silent patient","the turn of the key","the whisper man","the woman in the window","verity"],
+        ya: ["aristotle and dante discover the secrets of the universe","catching fire","children of blood and bone","city of bones","divergent","its not summer without you","looking for alaska","new moon","simon vs the homo sapiens agenda","the fault in our stars","the hunger games","the lightning thief","the maze runner","the summer i turned pretty","to all the boys ive loved before","turtles all the way down","twilight","wonder"],
+    };
+    const _CURATED_GENRE_BY_TITLE = new Map();
+    Object.keys(_CURATED_GENRES).forEach(g => _CURATED_GENRES[g].forEach(t => _CURATED_GENRE_BY_TITLE.set(t, g)));
+
+    window.mochiGenreLabel = (key) => _GENRE_LABELS[key] || _GENRE_LABELS.other;
+    window.mochiBookGenre = (book) => {
+        const curated = _CURATED_GENRE_BY_TITLE.get(_titleKey(book.title));
+        if (curated && curated !== 'booktok') return curated;
+        const tags = (book.tags || []).join(' ');
+        for (const [re, g] of _TAG_GENRES) if (re.test(tags)) return g;
+        return curated || 'other';
+    };
+    // [{ key, label, count, pct }] sorted by count, "Other" last
+    window.mochiGenreBreakdown = (books) => {
+        const counts = {};
+        (books || []).forEach(b => { const g = window.mochiBookGenre(b); counts[g] = (counts[g] || 0) + 1; });
+        const total = Object.values(counts).reduce((s, n) => s + n, 0) || 1;
+        return Object.entries(counts)
+            .sort(([a, x], [b, y]) => (a === 'other') - (b === 'other') || y - x)
+            .map(([key, count]) => ({ key, label: _GENRE_LABELS[key], count, pct: Math.round(count / total * 100) }));
+    };
+
     // ── Main entry point ────────────────────────────
     window.initMochi = async function (onReady) {
         _injectStyles();
@@ -635,6 +772,11 @@
             await window.mochiLoadBooks();
         } catch (e) {
             console.error('Mochi: failed to load books', e);
+        }
+        try {
+            await window.mochiLoadLog();
+        } catch (e) {
+            console.error('Mochi: failed to load reading log', e);
         }
 
         onReady();

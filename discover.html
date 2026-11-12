@@ -876,7 +876,7 @@ const CURATED_INFO = {
     "icebreaker": { coverId: 13180728, pageCount: 448, key: "/works/OL28952677W" },
     "in a dark dark wood": { coverId: 13782930, pageCount: 352, key: "/works/OL19729767W" },
     "in a holidaze": { coverId: 10505228, pageCount: 320, key: "/works/OL21895914W" },
-    "iron flame": { coverId: 14405746, pageCount: 640, key: "/works/OL34028551W" },
+    "iron flame": { coverId: 15231542, pageCount: 640, key: "/works/OL34028551W" },
     "it ends with us": { coverId: 10473609, pageCount: 384, key: "/works/OL18020194W" },
     "its not summer without you": { coverId: 14428232, pageCount: 284, key: "/works/OL15640090W" },
     "just for the summer": { coverId: 14602781, pageCount: null, key: "/works/OL37575309W" },
@@ -899,7 +899,7 @@ const CURATED_INFO = {
     "one by one": { coverId: 10109268, pageCount: 384, key: "/works/OL20809405W" },
     "one day": { coverId: 8580421, pageCount: 437, key: "/works/OL15424701W" },
     "one day in december": { coverId: 12856531, pageCount: 416, key: "/works/OL19762562W" },
-    "part of your world": { coverId: 11753444, pageCount: 400, key: "/works/OL24865656W" },
+    "part of your world": { coverId: 14642387, pageCount: 400, key: "/works/OL24865656W" },
     "people we meet on vacation": { coverId: 10476782, pageCount: 432, key: "/works/OL22563730W" },
     "piranesi": { coverId: 10226290, pageCount: 272, key: "/works/OL20893680W" },
     "powerless": { coverId: 14567864, pageCount: 600, key: "/works/OL34774028W" },
@@ -940,7 +940,7 @@ const CURATED_INFO = {
     "the hunger games": { coverId: 12646537, pageCount: 397, key: "/works/OL5735363W" },
     "the hunting party": { coverId: 8797519, pageCount: 352, key: "/works/OL20152797W" },
     "the inheritance games": { coverId: 10472357, pageCount: 392, key: "/works/OL21692056W" },
-    "the kaiju preservation society": { coverId: 10859555, pageCount: 296, key: "/works/OL24337701W" },
+    "the kaiju preservation society": { coverId: 13195290, pageCount: 296, key: "/works/OL24337701W" },
     "the kiss quotient": { coverId: 14635918, pageCount: 336, key: "/works/OL19744698W" },
     "the last murder at the end of the world": { coverId: 14621897, pageCount: 504, key: "/works/OL38057028W" },
     "the last thing he told me": { coverId: 10571017, pageCount: 320, key: "/works/OL24161797W" },
@@ -956,7 +956,7 @@ const CURATED_INFO = {
     "the never king": { coverId: 15163378, pageCount: 192, key: "/works/OL35345999W" },
     "the night circus": { coverId: 8773134, pageCount: 512, key: "/works/OL16086747W" },
     "the plot": { coverId: 10540813, pageCount: 304, key: "/works/OL24143036W" },
-    "the poppy war": { coverId: 8463552, pageCount: 522, key: "/works/OL19351054W" },
+    "the poppy war": { coverId: 8797732, pageCount: 522, key: "/works/OL19351054W" },
     "the power": { coverId: 7892681, pageCount: 352, key: "/works/OL17607742W" },
     "the sanatorium": { coverId: 14640925, pageCount: 450, key: "/works/OL37516935W" },
     "the seven husbands of evelyn hugo": { coverId: 8354226, pageCount: 400, key: "/works/OL18203673W" },
@@ -1380,9 +1380,11 @@ function createCard(book, onShelf, colorIdx) {
     const img = card.querySelector('img');
     const fallbackEl = card.querySelector('.disc-cover-fallback');
     const loader = card.querySelector('.disc-cover-loader');
+    // Open Library answers a tiny thumbnail (e.g. 60×40) for some missing covers — treat that like no cover
+    const showCover = () => { loader.remove(); if (img.naturalWidth >= 100) img.style.display = 'block'; else fallbackEl.style.display = 'flex'; };
     if (book.coverId) {
         img.src = `https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg`;
-        img.onload = () => { loader.remove(); img.style.display = 'block'; };
+        img.onload = showCover;
         img.onerror = () => { loader.remove(); fallbackEl.style.display = 'flex'; };
     } else if (!book.needsLookup) {
         loader.remove(); fallbackEl.style.display = 'flex';
@@ -1408,7 +1410,7 @@ function createCard(book, onShelf, colorIdx) {
             book.pageCount = info.pageCount;
             if (info.coverId) {
                 img.src = `https://covers.openlibrary.org/b/id/${info.coverId}-M.jpg`;
-                img.onload = () => { loader.remove(); img.style.display = 'block'; };
+                img.onload = showCover;
                 img.onerror = () => { loader.remove(); fallbackEl.style.display = 'flex'; };
             } else {
                 loader.remove(); fallbackEl.style.display = 'flex';
